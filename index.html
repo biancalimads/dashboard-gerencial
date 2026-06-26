@@ -1,0 +1,1797 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dellamed — Visão Gerencial</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --dm-navy: #002d5a;
+  --dm-blue: #0056b3;
+  --dm-blue-mid: #4a90d9;
+  --dm-blue-light: #e6f0fa;
+  --dm-blue-soft: #f3f7fc;
+  --text: #1a2332;
+  --text-2: #5b6678;
+  --text-3: #8a93a3;
+  --border: #e3e8ef;
+  --bg: #ffffff;
+  --bg-soft: #f7f9fc;
+  --ok: #0a8d4f;
+  --warn: #d68910;
+  --crit: #c0392b;
+  --neutral: #6b7280;
+  --shadow: 0 1px 2px rgba(0,45,90,.04), 0 1px 3px rgba(0,45,90,.04);
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg-soft);
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.45;
+}
+button, input, select { font-family: inherit; }
+.app { display: flex; min-height: 100vh; }
+
+/* ===== SIDEBAR ===== */
+.sidebar {
+  width: 280px;
+  background: var(--dm-navy);
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+}
+.brand {
+  padding: 22px 22px 20px;
+  border-bottom: 1px solid rgba(255,255,255,.1);
+}
+.brand-name { font-size: 18px; font-weight: 700; letter-spacing: .3px; }
+.brand-sub { font-size: 11px; color: rgba(255,255,255,.65); margin-top: 2px; text-transform: uppercase; letter-spacing: 1.2px; }
+.filters { padding: 18px 22px 24px; flex: 1; }
+.filter-group { margin-bottom: 22px; }
+.filter-label {
+  font-size: 10.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: rgba(255,255,255,.7);
+  margin-bottom: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.filter-label .count {
+  background: rgba(255,255,255,.15);
+  color: #fff;
+  font-size: 10px;
+  padding: 1px 7px;
+  border-radius: 10px;
+  letter-spacing: 0;
+}
+.filter-search {
+  width: 100%;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.14);
+  color: #fff;
+  padding: 6px 10px 6px 28px;
+  border-radius: 6px;
+  font-size: 12px;
+  outline: none;
+  margin-bottom: 6px;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23ffffff99' stroke-width='2'><circle cx='11' cy='11' r='7'/><line x1='21' y1='21' x2='16.65' y2='16.65'/></svg>");
+  background-repeat: no-repeat;
+  background-position: 9px center;
+}
+.filter-search::placeholder { color: rgba(255,255,255,.5); }
+.filter-search:focus { border-color: var(--dm-blue-mid); background-color: rgba(255,255,255,.1); }
+.multi-select {
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 6px;
+  max-height: 140px;
+  overflow-y: auto;
+  padding: 4px 0;
+}
+.multi-select::-webkit-scrollbar { width: 6px; }
+.multi-select::-webkit-scrollbar-thumb { background: rgba(255,255,255,.2); border-radius: 3px; }
+.opt {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 10px;
+  cursor: pointer;
+  font-size: 12.5px;
+  color: #fff;
+  transition: background .12s;
+}
+.opt:hover { background: rgba(255,255,255,.07); }
+.opt input { accent-color: var(--dm-blue-mid); cursor: pointer; }
+.opt .sub { color: rgba(255,255,255,.5); font-size: 10.5px; margin-left: auto; }
+.opt.hidden { display: none; }
+.empty-opt { padding: 10px; text-align: center; color: rgba(255,255,255,.5); font-size: 11.5px; font-style: italic; }
+.year-select {
+  width: 100%;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.12);
+  color: #fff;
+  padding: 8px 10px;
+  border-radius: 6px;
+  font-size: 13px;
+  margin-bottom: 10px;
+}
+.month-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
+.month-chip {
+  text-align: center;
+  font-size: 11px;
+  padding: 5px 0;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 4px;
+  cursor: pointer;
+  user-select: none;
+  transition: all .12s;
+}
+.month-chip:hover { background: rgba(255,255,255,.12); }
+.month-chip.on { background: var(--dm-blue); border-color: var(--dm-blue-mid); }
+.filter-actions { display: flex; gap: 8px; margin-top: 8px; }
+.btn {
+  flex: 1;
+  padding: 8px 0;
+  border-radius: 6px;
+  border: none;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  letter-spacing: .3px;
+}
+.btn-primary { background: var(--dm-blue); color: #fff; }
+.btn-primary:hover { background: var(--dm-blue-mid); }
+.btn-ghost { background: transparent; color: rgba(255,255,255,.8); border: 1px solid rgba(255,255,255,.2); }
+.btn-ghost:hover { background: rgba(255,255,255,.08); }
+
+/* ===== MAIN ===== */
+.main { flex: 1; padding: 24px 32px 48px; min-width: 0; }
+.page-header {
+  display: flex; justify-content: space-between; align-items: flex-end;
+  margin-bottom: 24px; padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+.page-title { font-size: 22px; font-weight: 700; color: var(--dm-navy); }
+.page-sub { color: var(--text-2); font-size: 13px; margin-top: 2px; }
+.update-info { font-size: 12px; color: var(--text-2); text-align: right; }
+.update-info b { color: var(--dm-navy); font-weight: 600; }
+
+.section { margin-bottom: 22px; }
+.section-title {
+  font-size: 11px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 1.4px; color: var(--text-3); margin-bottom: 10px;
+}
+
+/* ===== KPI CARDS ===== */
+.kpi-row { display: grid; gap: 14px; }
+.kpi-row.cols-4 { grid-template-columns: repeat(4, 1fr); }
+.kpi-row.cols-3 { grid-template-columns: repeat(3, 1fr); }
+.kpi-row.cols-2 { grid-template-columns: repeat(2, 1fr); }
+
+.kpi {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px 18px;
+  box-shadow: var(--shadow);
+  position: relative; overflow: hidden;
+  transition: transform .12s, box-shadow .12s, border-color .12s;
+}
+.kpi.featured { border-left: 3px solid var(--dm-blue); }
+.kpi.clickable { cursor: pointer; }
+.kpi.clickable:hover { transform: translateY(-1px); box-shadow: 0 4px 10px rgba(0,45,90,.08); border-color: var(--dm-blue-mid); }
+.kpi.active { background: var(--dm-blue-soft); border-color: var(--dm-blue); }
+.kpi-label { font-size: 11px; color: var(--text-2); font-weight: 500; text-transform: uppercase; letter-spacing: .8px; margin-bottom: 6px; }
+.kpi-value { font-size: 22px; font-weight: 700; color: var(--dm-navy); line-height: 1.1; font-variant-numeric: tabular-nums; word-break: break-word; }
+.kpi-value.brl { font-size: 19px; }
+.kpi-foot { font-size: 11.5px; color: var(--text-2); margin-top: 6px; display: flex; align-items: center; gap: 6px; }
+.pill { padding: 1px 7px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+.pill.ok { background: #e6f5ec; color: var(--ok); }
+.pill.warn { background: #fdf2dc; color: var(--warn); }
+.pill.crit { background: #fbe7e4; color: var(--crit); }
+.pill.neutral { background: #eef1f5; color: var(--text-2); }
+.progress-bar { height: 5px; background: var(--dm-blue-light); border-radius: 3px; overflow: hidden; margin-top: 10px; }
+.progress-bar > div { height: 100%; background: var(--dm-blue); border-radius: 3px; transition: width .4s; }
+
+/* ===== PANELS ===== */
+.panel {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 18px 20px;
+  box-shadow: var(--shadow);
+}
+.panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+.panel-title { font-size: 14px; font-weight: 600; color: var(--dm-navy); }
+.panel-sub { font-size: 11px; color: var(--text-3); }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.grid-1-2 { display: grid; grid-template-columns: 1fr 1.6fr; gap: 14px; }
+
+/* sub-kpis */
+.sub-kpi-row { display: grid; gap: 10px; }
+.sub-kpi-row.col-4 { grid-template-columns: repeat(4, 1fr); }
+.sub-kpi-row.col-3 { grid-template-columns: repeat(3, 1fr); }
+.sub-kpi-row.col-2 { grid-template-columns: repeat(2, 1fr); }
+.sub-kpi {
+  padding: 12px 14px;
+  background: var(--dm-blue-soft);
+  border-radius: 6px;
+  border: 1px solid transparent;
+  transition: all .12s;
+}
+.sub-kpi.clickable { cursor: pointer; }
+.sub-kpi.clickable:hover { background: var(--dm-blue-light); border-color: var(--dm-blue-mid); }
+.sub-kpi.active { background: #fff; border-color: var(--dm-blue); box-shadow: 0 0 0 2px var(--dm-blue-light); }
+.sub-kpi-label { font-size: 11px; color: var(--text-2); text-transform: uppercase; letter-spacing: .6px; }
+.sub-kpi-value { font-size: 20px; font-weight: 700; color: var(--dm-navy); margin-top: 4px; font-variant-numeric: tabular-nums; }
+.sub-kpi-value.brl { font-size: 16px; }
+.sub-kpi-foot { font-size: 11px; color: var(--text-2); margin-top: 4px; }
+
+/* mini table */
+.mini-table { width: 100%; font-size: 12.5px; border-collapse: collapse; }
+.mini-table th { text-align: left; color: var(--text-2); font-weight: 500; font-size: 11px; text-transform: uppercase; letter-spacing: .6px; padding: 6px 8px; border-bottom: 1px solid var(--border); }
+.mini-table td { padding: 7px 8px; border-bottom: 1px solid #f0f3f8; font-variant-numeric: tabular-nums; }
+.mini-table tr:last-child td { border-bottom: none; }
+.mini-table .num { text-align: right; }
+
+/* status list (clickable) */
+.status-list { display: flex; flex-direction: column; gap: 2px; }
+.status-row {
+  display: grid;
+  grid-template-columns: 16px 1fr auto auto;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background .12s;
+  border: 1px solid transparent;
+}
+.status-row:hover { background: var(--dm-blue-soft); }
+.status-row.active { background: var(--dm-blue-light); border-color: var(--dm-blue); }
+.status-dot { width: 10px; height: 10px; border-radius: 50%; }
+.status-name { font-weight: 500; color: var(--text); font-size: 13px; }
+.status-qty { font-variant-numeric: tabular-nums; font-weight: 600; color: var(--dm-navy); }
+.status-pct { font-size: 11.5px; color: var(--text-2); min-width: 42px; text-align: right; }
+
+/* charts */
+.chart-wrap { position: relative; height: 240px; }
+
+/* ranking */
+.rank-list { display: flex; flex-direction: column; }
+.rank-row {
+  display: grid; grid-template-columns: 26px 1fr auto auto;
+  align-items: center; gap: 10px;
+  padding: 9px 0;
+  border-bottom: 1px solid #f0f3f8;
+  font-size: 13px;
+}
+.rank-row:last-child { border-bottom: none; }
+.rank-num { color: var(--text-3); font-weight: 600; font-size: 11px; text-align: right; }
+.rank-name { color: var(--text); font-weight: 500; }
+.rank-bar-wrap { width: 130px; height: 5px; background: var(--dm-blue-light); border-radius: 3px; overflow: hidden; }
+.rank-bar { height: 100%; background: var(--dm-blue); border-radius: 3px; }
+.rank-value { font-variant-numeric: tabular-nums; font-weight: 600; color: var(--dm-navy); min-width: 130px; text-align: right; font-size: 12.5px; }
+.rank-toggle { font-size: 11px; color: var(--text-2); cursor: pointer; display: inline-flex; gap: 4px; align-items: center; }
+.rank-toggle:hover { color: var(--dm-blue); }
+
+/* main table */
+.table-wrap { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; box-shadow: var(--shadow); overflow: hidden; }
+.table-head { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px 12px; border-bottom: 1px solid var(--border); }
+.table-actions { display: flex; gap: 8px; align-items: center; }
+.search-input { font-size: 12.5px; padding: 6px 10px; border: 1px solid var(--border); border-radius: 5px; outline: none; width: 220px; }
+.search-input:focus { border-color: var(--dm-blue); }
+.btn-sm { padding: 5px 10px; font-size: 11.5px; border: 1px solid var(--border); background: #fff; border-radius: 5px; cursor: pointer; color: var(--text-2); }
+.btn-sm:hover { background: var(--dm-blue-soft); color: var(--dm-blue); border-color: var(--dm-blue-mid); }
+
+/* active filters bar */
+.active-filters {
+  display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
+  padding: 10px 20px;
+  background: var(--dm-blue-soft);
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+}
+.active-filters .lbl { color: var(--text-2); font-weight: 500; margin-right: 4px; text-transform: uppercase; font-size: 10.5px; letter-spacing: .6px; }
+.chip-active {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--dm-blue); color: #fff;
+  padding: 3px 8px 3px 10px;
+  border-radius: 12px;
+  font-size: 11.5px; font-weight: 500;
+}
+.chip-active .x { cursor: pointer; opacity: .8; font-size: 14px; line-height: 1; }
+.chip-active .x:hover { opacity: 1; }
+.clear-all { margin-left: auto; font-size: 11px; color: var(--dm-blue); cursor: pointer; font-weight: 500; }
+.clear-all:hover { text-decoration: underline; }
+
+.scroll-x { overflow-x: auto; }
+.dtable { width: 100%; border-collapse: collapse; font-size: 12.5px; min-width: 1620px; }
+.dtable thead th {
+  background: var(--dm-blue-soft); color: var(--dm-navy);
+  font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: .5px;
+  padding: 10px 12px; text-align: left;
+  border-bottom: 2px solid var(--border);
+  cursor: pointer; user-select: none; white-space: nowrap;
+  position: sticky; top: 0;
+}
+.dtable thead th .arrow { color: var(--text-3); margin-left: 4px; font-size: 9px; }
+.dtable thead th.sorted .arrow { color: var(--dm-blue); }
+.dtable thead th:hover { background: var(--dm-blue-light); }
+.dtable tbody td { padding: 9px 12px; border-bottom: 1px solid #f0f3f8; vertical-align: middle; }
+.dtable tbody tr:hover { background: #fafcfe; }
+.dtable .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.dtable .grupo { font-weight: 600; color: var(--dm-navy); }
+.expand-btn {
+  background: var(--dm-blue-light); color: var(--dm-blue);
+  border: none; width: 22px; height: 22px;
+  border-radius: 4px; cursor: pointer; font-weight: 700;
+  font-size: 14px; line-height: 1;
+}
+.expand-btn:hover { background: var(--dm-blue); color: #fff; }
+.expand-btn.open { background: var(--dm-blue); color: #fff; }
+
+.expand-row td { background: #fafcfe; padding: 14px 18px; }
+.expand-grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 22px; }
+.expand-col h5 {
+  margin: 0 0 8px; font-size: 11px; text-transform: uppercase;
+  letter-spacing: .8px; color: var(--text-3); font-weight: 600;
+  display: flex; justify-content: space-between;
+}
+.sku-table { width: 100%; font-size: 12px; border-collapse: collapse; }
+.sku-table th {
+  text-align: left; font-size: 10px; font-weight: 600; color: var(--text-3);
+  text-transform: uppercase; letter-spacing: .5px;
+  padding: 5px 8px; border-bottom: 1px solid var(--border);
+}
+.sku-table th.num, .sku-table td.num { text-align: right; font-variant-numeric: tabular-nums; }
+.sku-table td { padding: 6px 8px; border-bottom: 1px solid #eef1f5; }
+.sku-table tr:last-child td { border-bottom: none; }
+.sku-table .codigo { font-family: ui-monospace, monospace; font-size: 11px; color: var(--text-2); }
+.sku-table.comprados td { color: var(--text); }
+.sku-table.naocomprados td { color: var(--text-2); }
+.delta-up { color: var(--ok); font-size: 10.5px; margin-left: 4px; }
+.delta-down { color: var(--crit); font-size: 10.5px; margin-left: 4px; }
+
+/* status badges */
+.badge { font-size: 10.5px; padding: 2px 8px; border-radius: 10px; font-weight: 600; white-space: nowrap; }
+.badge.ativo { background: #e6f5ec; color: var(--ok); }
+.badge.inativo { background: #fbe7e4; color: var(--crit); }
+.badge.prospect { background: #e8eef9; color: var(--dm-blue); }
+.badge.onboard { background: #fdf2dc; color: var(--warn); }
+.badge.suspenso { background: #eef1f5; color: var(--text-2); }
+
+.flag-yes { color: var(--crit); font-weight: 600; }
+.flag-no { color: var(--text-3); }
+
+footer.dash-foot {
+  margin-top: 30px; font-size: 11px; color: var(--text-3);
+  text-align: center; padding-top: 18px;
+  border-top: 1px solid var(--border);
+}
+
+
+.kpi-org {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 6px;
+  background: var(--dm-blue);
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  border-radius: 3px;
+  vertical-align: middle;
+  position: relative; top: -1px;
+}
+.kpi-org.recorte-tag {
+  background: var(--dm-blue-mid);
+}
+.kpi-row-sm .kpi { padding: 12px 14px; }
+.kpi-row-sm .kpi-label { font-size: 10px; }
+.kpi-value.smaller { font-size: 16px; }
+.kpi-value.brl.smaller { font-size: 15px; }
+
+
+.btn-sm.btn-sm-active {
+  background: var(--dm-blue);
+  color: #fff;
+  border-color: var(--dm-blue);
+}
+.btn-sm.btn-sm-active:hover { background: var(--dm-blue-mid); border-color: var(--dm-blue-mid); }
+
+@media (max-width: 1180px) {
+  .kpi-row.cols-4 { grid-template-columns: repeat(2, 1fr); }
+  .kpi-row.cols-3 { grid-template-columns: repeat(2, 1fr); }
+  .sub-kpi-row.col-4 { grid-template-columns: repeat(2, 1fr); }
+  .grid-2, .grid-1-2 { grid-template-columns: 1fr; }
+  .expand-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- =================== SIDEBAR =================== -->
+<aside class="sidebar">
+  <div class="brand">
+    <div class="brand-name">Dellamed</div>
+    <div class="brand-sub">Visão Gerencial</div>
+  </div>
+  <div class="filters">
+
+    <div class="filter-group">
+      <div class="filter-label">Representante <span class="count" id="cnt-rep">—</span></div>
+      <input class="filter-search" id="search-rep" placeholder="Buscar representante…">
+      <div class="multi-select" id="filter-rep"></div>
+    </div>
+
+    <div class="filter-group">
+      <div class="filter-label">Time <span class="count" id="cnt-time">—</span></div>
+      <input class="filter-search" id="search-time" placeholder="Buscar líder de time…">
+      <div class="multi-select" id="filter-time"></div>
+    </div>
+
+    <div class="filter-group">
+      <div class="filter-label">Ano</div>
+      <select class="year-select" id="filter-year">
+        <option value="2025">2025</option>
+        <option value="2026" selected>2026</option>
+      </select>
+      <div class="filter-label" style="margin-top:14px">Mês <span class="count" id="cnt-mes">—</span></div>
+      <div class="month-grid" id="filter-mes"></div>
+    </div>
+
+    <div class="filter-actions">
+      <button class="btn btn-ghost" id="btn-clear">Limpar</button>
+      <button class="btn btn-primary" id="btn-apply">Aplicar</button>
+    </div>
+  </div>
+</aside>
+
+<!-- =================== MAIN =================== -->
+<main class="main">
+
+  <div class="page-header">
+    <div>
+      <div class="page-title">Visão Gerencial Comercial</div>
+      <div class="page-sub">Performance, carteira e movimentação de clientes</div>
+    </div>
+    <div class="update-info">
+      Última atualização<br>
+      <b id="last-update">—</b>
+    </div>
+  </div>
+
+  <!-- SECTION 1 — KPIs principais -->
+  <div class="section">
+    <div class="section-title">Performance comercial <span id="periodo-info" style="color:var(--text-2);font-weight:500;text-transform:none;letter-spacing:0;margin-left:8px"></span></div>
+
+    <!-- Faixa Dellamed (total da empresa, sempre visivel) -->
+    <div class="kpi-row cols-4">
+      <div class="kpi featured">
+        <div class="kpi-label">Meta comercial <span class="kpi-org">DELLAMED</span></div>
+        <div class="kpi-value brl" id="kpi-meta">—</div>
+        <div class="kpi-foot">no período selecionado</div>
+      </div>
+      <div class="kpi featured">
+        <div class="kpi-label">Faturamento <span class="kpi-org">DELLAMED</span></div>
+        <div class="kpi-value brl" id="kpi-fat">—</div>
+        <div class="kpi-foot"><span class="pill ok" id="kpi-fat-vs">—</span> vs meta</div>
+        <div class="progress-bar"><div id="kpi-fat-bar" style="width:0%"></div></div>
+      </div>
+      <div class="kpi featured">
+        <div class="kpi-label">Total de pedidos <span class="kpi-org">DELLAMED</span></div>
+        <div class="kpi-value brl" id="kpi-ped">—</div>
+        <div class="kpi-foot">faturado + a faturar</div>
+      </div>
+      <div class="kpi featured clickable" data-drill="all-groups">
+        <div class="kpi-label">Grupos de clientes</div>
+        <div class="kpi-value" id="kpi-grupos">—</div>
+        <div class="kpi-foot" id="kpi-grupos-foot">— ativos no período</div>
+      </div>
+    </div>
+
+    <!-- Faixa Recorte (aparece quando ha filtro de Time/Representante) -->
+    <div class="kpi-row cols-4 kpi-row-sm" id="kpi-recorte" style="display:none; margin-top:10px">
+      <div class="kpi">
+        <div class="kpi-label">Meta <span class="kpi-org recorte-tag" id="rec-tag-1">RECORTE</span></div>
+        <div class="kpi-value brl smaller" id="rec-meta">—</div>
+        <div class="kpi-foot" id="rec-meta-foot">—</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Faturamento <span class="kpi-org recorte-tag" id="rec-tag-2">RECORTE</span></div>
+        <div class="kpi-value brl smaller" id="rec-fat">—</div>
+        <div class="kpi-foot"><span class="pill ok" id="rec-fat-vs">—</span> vs meta recorte</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Total de pedidos <span class="kpi-org recorte-tag" id="rec-tag-3">RECORTE</span></div>
+        <div class="kpi-value brl smaller" id="rec-ped">—</div>
+        <div class="kpi-foot">faturado + a faturar</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Grupos no recorte</div>
+        <div class="kpi-value smaller" id="rec-grupos">—</div>
+        <div class="kpi-foot" id="rec-grupos-foot">—</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 2 — Movimentação + Em aberto -->
+  <div class="section">
+    <div class="section-title">Carteira e movimentação</div>
+    <div class="grid-2">
+
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">Carteira e movimentação</div>
+          <div class="panel-sub">clique para filtrar</div>
+        </div>
+        <div class="sub-kpi-row col-4">
+          <div class="sub-kpi clickable" data-drill="carteira:ativo_mes_ant">
+            <div class="sub-kpi-label">Ativo Mês Anterior</div>
+            <div class="sub-kpi-value" id="cart-ativo-ant">—</div>
+            <div class="sub-kpi-foot"><span id="cart-ativo-ant-pct">—</span> do total</div>
+          </div>
+          <div class="sub-kpi clickable" data-drill="carteira:inativaram_mes">
+            <div class="sub-kpi-label">Inativaram no Mês</div>
+            <div class="sub-kpi-value" id="cart-inat-mes">—</div>
+            <div class="sub-kpi-foot"><span id="cart-inat-mes-pct">—</span> do total</div>
+          </div>
+          <div class="sub-kpi clickable" data-drill="carteira:nunca_comprou">
+            <div class="sub-kpi-label">Nunca Comprou</div>
+            <div class="sub-kpi-value" id="cart-nunca">—</div>
+            <div class="sub-kpi-foot"><span id="cart-nunca-pct">—</span> do total</div>
+          </div>
+          <div class="sub-kpi clickable" data-drill="carteira:sem_data_inativ">
+            <div class="sub-kpi-label">Sem Data Inativação</div>
+            <div class="sub-kpi-value" id="cart-sem-data">—</div>
+            <div class="sub-kpi-foot"><span id="cart-sem-data-pct">—</span> do total</div>
+          </div>
+        </div>
+        <div class="sub-kpi-row col-4" style="margin-top:10px">
+          <div class="sub-kpi clickable" data-drill="carteira:inat_este_mes">
+            <div class="sub-kpi-label">Inativam Este Mês</div>
+            <div class="sub-kpi-value" id="cart-inat-este">—</div>
+            <div class="sub-kpi-foot"><span id="cart-inat-este-pct">—</span> do total</div>
+          </div>
+          <div class="sub-kpi clickable" data-drill="carteira:inat_prox_mes">
+            <div class="sub-kpi-label">Inativam Próx. Mês</div>
+            <div class="sub-kpi-value" id="cart-inat-prox">—</div>
+            <div class="sub-kpi-foot"><span id="cart-inat-prox-pct">—</span> do total</div>
+          </div>
+          <div class="sub-kpi clickable" data-drill="carteira:inat_90d">
+            <div class="sub-kpi-label">Inativam em 90 Dias</div>
+            <div class="sub-kpi-value" id="cart-inat-90d">—</div>
+            <div class="sub-kpi-foot"><span id="cart-inat-90d-pct">—</span> do total</div>
+          </div>
+          <div class="sub-kpi clickable" data-drill="carteira:inat_futura">
+            <div class="sub-kpi-label">Inativação Futura</div>
+            <div class="sub-kpi-value" id="cart-inat-fut">—</div>
+            <div class="sub-kpi-foot"><span id="cart-inat-fut-pct">—</span> do total</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">Em aberto</div>
+          <div class="panel-sub">pedidos pendentes e a faturar</div>
+        </div>
+        <div class="sub-kpi-row col-2">
+          <div class="sub-kpi">
+            <div class="sub-kpi-label">Faturamento em aberto</div>
+            <div class="sub-kpi-value brl" id="ab-fat">—</div>
+          </div>
+          <div class="sub-kpi">
+            <div class="sub-kpi-label">Pedidos em aberto</div>
+            <div class="sub-kpi-value" id="ab-ped">—</div>
+          </div>
+        </div>
+        <table class="mini-table sortable" style="margin-top:14px">
+          <thead>
+            <tr id="pend-thead"></tr>
+          </thead>
+          <tbody id="pendentes-body"></tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- SECTION 3 — Status + UF/Segmento -->
+  <div class="section">
+    <div class="section-title">Composição da carteira</div>
+    <div class="grid-1-2">
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">Status dos clientes</div>
+          <div class="panel-sub">clique para filtrar</div>
+        </div>
+        <div class="status-list" id="status-list"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">Distribuição da carteira</div>
+          <div class="panel-sub">clique nas barras / fatias para filtrar</div>
+        </div>
+        <div class="grid-2" style="gap:18px">
+          <div>
+            <div class="panel-sub" style="margin-bottom:6px">por UF</div>
+            <div class="chart-wrap"><canvas id="chart-uf"></canvas></div>
+          </div>
+          <div>
+            <div class="panel-sub" style="margin-bottom:6px">por segmento</div>
+            <div class="chart-wrap"><canvas id="chart-seg"></canvas></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 4 — Ranking -->
+  <div class="section">
+    <div class="section-title">Ranking por faturamento</div>
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">Grupos de clientes — faturamento no período</div>
+        <div class="panel-sub">
+          <span class="rank-toggle" id="rank-toggle">
+            <span id="rank-dir-label">↓ decrescente</span> · trocar
+          </span>
+        </div>
+      </div>
+      <div class="rank-list" id="rank-list"></div>
+    </div>
+  </div>
+
+  <!-- SECTION 5 — Tabela -->
+  <div class="section">
+    <div class="section-title">Detalhamento por grupo de cliente</div>
+    <div class="table-wrap">
+      <div class="table-head">
+        <div>
+          <div class="panel-title">Carteira detalhada</div>
+          <div class="panel-sub" id="table-count">—</div>
+        </div>
+        <div class="table-actions">
+          <input class="search-input" id="table-search" placeholder="Buscar grupo…">
+          <button class="btn-sm" id="btn-expand-all">Expandir tudo</button>
+          <button class="btn-sm" id="btn-csv">Exportar CSV</button>
+        </div>
+      </div>
+      <div class="active-filters" id="active-filters" style="display:none">
+        <span class="lbl">Filtros ativos</span>
+        <div id="active-filters-list" style="display:inline-flex; gap:6px; flex-wrap:wrap"></div>
+        <span class="clear-all" id="clear-drills">limpar todos</span>
+      </div>
+      <div class="scroll-x">
+        <table class="dtable">
+          <thead><tr id="thead-row"></tr></thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <footer class="dash-foot">
+    Dellamed · Visão Gerencial · Dados de demonstração — não representam números reais
+  </footer>
+
+</main>
+</div>
+
+<script>
+/* ==========================================================
+   DADOS — contrato do JSON. Estrutura final que o
+   qlik_pull.py deve gerar quando plugarmos a API.
+   ========================================================== */
+
+const DADOS = {
+  versao: 2,
+  atualizado_em: "2026-06-25T08:30:00-03:00",
+
+  representantes: [
+    { id: "R01", nome: "Ana Carolina Pires",  tipo: "Vendedor Interno",  time: "Marcelo Andrade", meta_individual: 350000.00 },
+    { id: "R02", nome: "Bruno Tavares",       tipo: "Key Account",       time: "Marcelo Andrade", meta_individual: 700000.00 },
+    { id: "R03", nome: "Camila Rocha",        tipo: "Vendedor Interno",  time: "Marcelo Andrade", meta_individual: 300000.00 },
+    { id: "R04", nome: "Diego Sanchez",       tipo: "Prospects",         time: "Patrícia Lima",   meta_individual: 150000.00 },
+    { id: "R05", nome: "Eduarda Mendes",      tipo: "Sucesso do Cliente",time: "Patrícia Lima",   meta_individual: 280000.00 },
+    { id: "R06", nome: "Felipe Carvalho",     tipo: "Key Account",       time: "Patrícia Lima",   meta_individual: 650000.00 },
+    { id: "R07", nome: "Gabriela Nascimento", tipo: "Vendedor Interno",  time: "Rafael Stein",    meta_individual: 320000.00 },
+    { id: "R08", nome: "Henrique Oliveira",   tipo: "Prospects",         time: "Rafael Stein",    meta_individual: 150000.00 },
+    { id: "R09", nome: "Isabela Freitas",     tipo: "Sucesso do Cliente",time: "Rafael Stein",    meta_individual: 250000.00 },
+    { id: "R10", nome: "João Pedro Almeida",  tipo: "Vendedor Interno",  time: "Juliana Castro",  meta_individual: 280000.00 },
+    { id: "R11", nome: "Karen Lopes",         tipo: "Key Account",       time: "Juliana Castro",  meta_individual: 620000.00 },
+    { id: "R12", nome: "Lucas Ribeiro",       tipo: "Prospects",         time: "Juliana Castro",  meta_individual: 150000.00 },
+  ],
+
+  // catálogo com preço de tabela (referência)
+  skus: [
+    { codigo: "DM-H001", desc: "Estetoscópio Litt.",       linha: "HEALTH",    preco_tabela: 320.00 },
+    { codigo: "DM-H012", desc: "Esfigmomanômetro Ad.",     linha: "HEALTH",    preco_tabela: 215.00 },
+    { codigo: "DM-H023", desc: "Oxímetro Portátil",        linha: "HEALTH",    preco_tabela: 189.00 },
+    { codigo: "DM-H041", desc: "Termômetro Infravermelho", linha: "HEALTH",    preco_tabela: 145.00 },
+    { codigo: "DM-B005", desc: "Massageador Cervical",     linha: "BEAUTY",    preco_tabela: 285.00 },
+    { codigo: "DM-B017", desc: "Aparelho Estética Facial", linha: "BEAUTY",    preco_tabela: 1240.00 },
+    { codigo: "DM-B029", desc: "Bota de Massagem",         linha: "BEAUTY",    preco_tabela: 1890.00 },
+    { codigo: "DM-O004", desc: "Cadeira Motorizada Pro",   linha: "ORTHOCARE", preco_tabela: 8450.00 },
+    { codigo: "DM-O011", desc: "Andador Dobrável",         linha: "ORTHOCARE", preco_tabela: 320.00 },
+    { codigo: "DM-O025", desc: "Bengala Quad. Reg.",       linha: "ORTHOCARE", preco_tabela: 145.00 },
+    { codigo: "DM-O036", desc: "Muleta Axilar Alum.",      linha: "ORTHOCARE", preco_tabela: 98.00 },
+    { codigo: "DM-O042", desc: "Cadeira Banho Ajust.",     linha: "ORTHOCARE", preco_tabela: 540.00 },
+    { codigo: "DM-M002", desc: "Colchão Pneumático",       linha: "HOME",      preco_tabela: 1320.00 },
+    { codigo: "DM-M015", desc: "Travesseiro Cervical",     linha: "HOME",      preco_tabela: 180.00 },
+    { codigo: "DM-M020", desc: "Compressor Bivolt",        linha: "HOME",      preco_tabela: 425.00 },
+    { codigo: "DM-M033", desc: "Pulseira Termal",          linha: "HOME",      preco_tabela: 89.00 },
+    { codigo: "DM-M047", desc: "Faixa Lomb. Magnética",    linha: "HOME",      preco_tabela: 165.00 },
+    { codigo: "DM-M058", desc: "Cinta Posturil Ergo",      linha: "HOME",      preco_tabela: 220.00 },
+  ],
+
+  totais: {
+    meta_comercial:    4_200_000.00,
+    faturamento:       3_870_500.00,
+    pedidos:           412,
+    pedidos_meta:      450,
+    pedidos_aberto:    32,
+    faturamento_aberto: 287_400.00,
+    inativacao_qtd:    6,
+    inativacao_ultima: "2026-06-18",
+    grupos_total:      28,
+    grupos_ativos:     19,
+    clientes_novos:    12,
+    clientes_reativ:   5,
+  },
+
+  status_clientes: [
+    { status: "Ativo",          qtd: 19, cor: "#0a8d4f" },
+    { status: "Em onboarding",  qtd:  4, cor: "#d68910" },
+    { status: "Prospect",       qtd:  6, cor: "#0056b3" },
+    { status: "Suspenso",       qtd:  2, cor: "#6b7280" },
+    { status: "Inativo",        qtd:  6, cor: "#c0392b" },
+  ],
+
+
+  // grupos: skus_comprados agora tem objetos com preço médio e último preço
+  grupos: [
+    { grupo:"Hospital São Lucas",       uf:"SP", seg:"Hospital",     status:"Ativo",         inadimplente:false, cadastro:"2019-03-12", ult_pedido:"2026-06-20", total_pedidos: 142, fat: 612_400.00, inativ_data:null, pedidos_pendentes: 6, valor_pendente: 72400.00, representante_id: "R02", data_inativacao_prevista: null,         historico_mensal: {"2026-01":{fat:93901.33,pedidos:22},"2026-02":{fat:91860.0,pedidos:21},"2026-03":{fat:107170.0,pedidos:25},"2026-04":{fat:102066.67,pedidos:24},"2026-05":{fat:108190.67,pedidos:25},"2026-06":{fat:109211.33,pedidos:25}}, skus_comprados:[
+      {codigo:"DM-H001", preco_medio: 305.50, ultimo_preco: 312.00, qtd_ult: 6, qtd_media: 5.8},
+      {codigo:"DM-H012", preco_medio: 205.00, ultimo_preco: 210.00, qtd_ult: 13, qtd_media: 13.4},
+      {codigo:"DM-H023", preco_medio: 178.30, ultimo_preco: 182.00, qtd_ult: 18, qtd_media: 16.6},
+      {codigo:"DM-H041", preco_medio: 138.00, ultimo_preco: 140.00, qtd_ult: 25, qtd_media: 22.8},
+      {codigo:"DM-O004", preco_medio: 8120.00, ultimo_preco: 8250.00, qtd_ult: 2, qtd_media: 1.9},
+      {codigo:"DM-O011", preco_medio: 298.00, ultimo_preco: 305.00, qtd_ult: 3, qtd_media: 3.8},
+      {codigo:"DM-O042", preco_medio: 510.00, ultimo_preco: 520.00, qtd_ult: 2, qtd_media: 1},
+      {codigo:"DM-M020", preco_medio: 398.00, ultimo_preco: 405.00, qtd_ult: 9, qtd_media: 7.2},
+    ]},
+    { grupo:"Clínica VidaPlena",        uf:"RS", seg:"Clínica",      status:"Ativo",         inadimplente:false, cadastro:"2020-08-04", ult_pedido:"2026-06-22", total_pedidos:  98, fat: 421_800.00, inativ_data:null, pedidos_pendentes: 5, valor_pendente: 58200.00, representante_id: "R01", data_inativacao_prevista: null,         historico_mensal: {"2026-01":{fat:64676.0,pedidos:15},"2026-02":{fat:63270.0,pedidos:15},"2026-03":{fat:73815.0,pedidos:17},"2026-04":{fat:70300.0,pedidos:16},"2026-05":{fat:74518.0,pedidos:17},"2026-06":{fat:75221.0,pedidos:17}}, skus_comprados:[
+      {codigo:"DM-H001", preco_medio: 310.00, ultimo_preco: 315.00, qtd_ult: 12, qtd_media: 9.5},
+      {codigo:"DM-H012", preco_medio: 208.00, ultimo_preco: 212.00, qtd_ult: 14, qtd_media: 12.9},
+      {codigo:"DM-H023", preco_medio: 180.00, ultimo_preco: 185.00, qtd_ult: 14, qtd_media: 13.8},
+      {codigo:"DM-B005", preco_medio: 270.00, ultimo_preco: 275.00, qtd_ult: 3, qtd_media: 1},
+      {codigo:"DM-B017", preco_medio: 1180.00, ultimo_preco: 1210.00, qtd_ult: 2, qtd_media: 3.9},
+    ]},
+    { grupo:"Rede MedFarma",            uf:"MG", seg:"Distribuidor", status:"Ativo",         inadimplente:false, cadastro:"2018-11-22", ult_pedido:"2026-06-19", total_pedidos: 187, fat: 798_500.00, inativ_data:null, pedidos_pendentes: 4, valor_pendente: 61800.00, representante_id: "R02", data_inativacao_prevista: null,         historico_mensal: {"2026-01":{fat:122436.67,pedidos:29},"2026-02":{fat:119775.0,pedidos:28},"2026-03":{fat:139737.5,pedidos:33},"2026-04":{fat:133083.33,pedidos:31},"2026-05":{fat:141068.33,pedidos:33},"2026-06":{fat:142399.17,pedidos:33}}, skus_comprados:[
+      {codigo:"DM-H001", preco_medio: 295.00, ultimo_preco: 290.00, qtd_ult: 11, qtd_media: 9.7},
+      {codigo:"DM-H012", preco_medio: 200.00, ultimo_preco: 198.00, qtd_ult: 8, qtd_media: 7.5},
+      {codigo:"DM-O004", preco_medio: 8000.00, ultimo_preco: 7950.00, qtd_ult: 1, qtd_media: 3.2},
+      {codigo:"DM-O011", preco_medio: 290.00, ultimo_preco: 288.00, qtd_ult: 8, qtd_media: 6.8},
+      {codigo:"DM-O025", preco_medio: 135.00, ultimo_preco: 138.00, qtd_ult: 11, qtd_media: 11.0},
+      {codigo:"DM-O036", preco_medio: 92.00, ultimo_preco: 94.00, qtd_ult: 11, qtd_media: 9.6},
+      {codigo:"DM-O042", preco_medio: 505.00, ultimo_preco: 510.00, qtd_ult: 2, qtd_media: 1},
+      {codigo:"DM-M015", preco_medio: 170.00, ultimo_preco: 175.00, qtd_ult: 15, qtd_media: 16.3},
+      {codigo:"DM-M020", preco_medio: 395.00, ultimo_preco: 400.00, qtd_ult: 8, qtd_media: 5.7},
+      {codigo:"DM-M033", preco_medio: 82.00, ultimo_preco: 85.00, qtd_ult: 17, qtd_media: 18.2},
+    ]},
+    { grupo:"Distrib. SulMédico",       uf:"PR", seg:"Distribuidor", status:"Ativo",         inadimplente:false, cadastro:"2017-05-30", ult_pedido:"2026-06-15", total_pedidos: 220, fat: 905_300.00, inativ_data:null, pedidos_pendentes: 4, valor_pendente: 48900.00, representante_id: "R06", data_inativacao_prevista: null,         historico_mensal: {"2026-01":{fat:138812.67,pedidos:34},"2026-02":{fat:135795.0,pedidos:33},"2026-03":{fat:158427.5,pedidos:39},"2026-04":{fat:150883.33,pedidos:37},"2026-05":{fat:159936.33,pedidos:39},"2026-06":{fat:161445.17,pedidos:39}}, skus_comprados:[
+      {codigo:"DM-H001", preco_medio: 288.00, ultimo_preco: 285.00, qtd_ult: 11, qtd_media: 9.2},
+      {codigo:"DM-H012", preco_medio: 198.00, ultimo_preco: 195.00, qtd_ult: 6, qtd_media: 6.1},
+      {codigo:"DM-H023", preco_medio: 172.00, ultimo_preco: 170.00, qtd_ult: 14, qtd_media: 13.3},
+      {codigo:"DM-H041", preco_medio: 132.00, ultimo_preco: 130.00, qtd_ult: 14, qtd_media: 16.4},
+      {codigo:"DM-O004", preco_medio: 7950.00, ultimo_preco: 7900.00, qtd_ult: 1, qtd_media: 1},
+      {codigo:"DM-O011", preco_medio: 285.00, ultimo_preco: 282.00, qtd_ult: 12, qtd_media: 10.6},
+      {codigo:"DM-O025", preco_medio: 132.00, ultimo_preco: 130.00, qtd_ult: 5, qtd_media: 3.5},
+      {codigo:"DM-M020", preco_medio: 388.00, ultimo_preco: 392.00, qtd_ult: 5, qtd_media: 5.3},
+      {codigo:"DM-M033", preco_medio: 80.00, ultimo_preco: 82.00, qtd_ult: 24, qtd_media: 23.5},
+      {codigo:"DM-M047", preco_medio: 155.00, ultimo_preco: 158.00, qtd_ult: 10, qtd_media: 11.6},
+      {codigo:"DM-M058", preco_medio: 205.00, ultimo_preco: 210.00, qtd_ult: 9, qtd_media: 11.2},
+    ]},
+    { grupo:"Farmácia BemEstar",        uf:"SP", seg:"Farmácia",     status:"Ativo",         inadimplente:false, cadastro:"2021-02-18", ult_pedido:"2026-06-10", total_pedidos:  54, fat: 184_600.00, inativ_data:null, pedidos_pendentes: 3, valor_pendente: 21300.00, representante_id: "R03", data_inativacao_prevista: "2026-06-28",         historico_mensal: {"2026-01":{fat:28305.33,pedidos:8},"2026-02":{fat:27690.0,pedidos:8},"2026-03":{fat:32305.0,pedidos:9},"2026-04":{fat:30766.67,pedidos:9},"2026-05":{fat:32612.67,pedidos:10},"2026-06":{fat:32920.33,pedidos:10}}, skus_comprados:[
+      {codigo:"DM-H023", preco_medio: 185.00, ultimo_preco: 188.00, qtd_ult: 13, qtd_media: 10.7},
+      {codigo:"DM-M015", preco_medio: 175.00, ultimo_preco: 178.00, qtd_ult: 11, qtd_media: 8.7},
+      {codigo:"DM-M020", preco_medio: 415.00, ultimo_preco: 420.00, qtd_ult: 7, qtd_media: 7.6},
+    ]},
+    { grupo:"Home Care Conforto",       uf:"RS", seg:"Home Care",    status:"Ativo",         inadimplente:false, cadastro:"2022-07-09", ult_pedido:"2026-05-28", total_pedidos:  41, fat: 167_900.00, inativ_data:null, pedidos_pendentes: 3, valor_pendente: 24800.00, representante_id: "R05", data_inativacao_prevista: "2026-06-30",         historico_mensal: {"2026-01":{fat:31332.25,pedidos:8},"2026-02":{fat:30651.12,pedidos:7},"2026-03":{fat:35759.63,pedidos:9},"2026-04":{fat:34056.8,pedidos:8},"2026-05":{fat:36100.2,pedidos:9}}, skus_comprados:[
+      {codigo:"DM-O011", preco_medio: 308.00, ultimo_preco: 312.00, qtd_ult: 9, qtd_media: 10.1},
+      {codigo:"DM-O025", preco_medio: 140.00, ultimo_preco: 142.00, qtd_ult: 12, qtd_media: 14.0},
+      {codigo:"DM-O036", preco_medio: 95.00, ultimo_preco: 96.00, qtd_ult: 13, qtd_media: 11.8},
+      {codigo:"DM-O042", preco_medio: 525.00, ultimo_preco: 530.00, qtd_ult: 4, qtd_media: 4.4},
+      {codigo:"DM-M015", preco_medio: 172.00, ultimo_preco: 175.00, qtd_ult: 13, qtd_media: 11.5},
+    ]},
+    { grupo:"Clínica Renascer",         uf:"SC", seg:"Clínica",      status:"Ativo",         inadimplente:true,  cadastro:"2020-01-14", ult_pedido:"2026-04-30", total_pedidos:  62, fat: 198_700.00, inativ_data:null, pedidos_pendentes: 0, valor_pendente: 0.00, representante_id: "R07", data_inativacao_prevista: "2026-07-15",         historico_mensal: {"2026-01":{fat:47236.18,pedidos:15},"2026-02":{fat:46209.3,pedidos:14},"2026-03":{fat:53910.85,pedidos:17},"2026-04":{fat:51343.67,pedidos:16}}, skus_comprados:[
+      {codigo:"DM-H001", preco_medio: 315.00, ultimo_preco: 320.00, qtd_ult: 15, qtd_media: 16.4},
+      {codigo:"DM-H012", preco_medio: 212.00, ultimo_preco: 215.00, qtd_ult: 11, qtd_media: 11.9},
+      {codigo:"DM-B005", preco_medio: 278.00, ultimo_preco: 282.00, qtd_ult: 4, qtd_media: 4.6},
+    ]},
+    { grupo:"Hospital Vida Nova",       uf:"BA", seg:"Hospital",     status:"Ativo",         inadimplente:false, cadastro:"2019-09-25", ult_pedido:"2026-06-18", total_pedidos: 134, fat: 489_200.00, inativ_data:null, pedidos_pendentes: 0, valor_pendente: 0.00, representante_id: "R11", data_inativacao_prevista: "2026-07-20",         historico_mensal: {"2026-01":{fat:75010.67,pedidos:21},"2026-02":{fat:73380.0,pedidos:20},"2026-03":{fat:85610.0,pedidos:23},"2026-04":{fat:81533.33,pedidos:22},"2026-05":{fat:86425.33,pedidos:24},"2026-06":{fat:87240.67,pedidos:24}}, skus_comprados:[
+      {codigo:"DM-H001", preco_medio: 302.00, ultimo_preco: 308.00, qtd_ult: 12, qtd_media: 13.4},
+      {codigo:"DM-H012", preco_medio: 206.00, ultimo_preco: 210.00, qtd_ult: 15, qtd_media: 13.7},
+      {codigo:"DM-H023", preco_medio: 180.00, ultimo_preco: 184.00, qtd_ult: 9, qtd_media: 11.0},
+      {codigo:"DM-O004", preco_medio: 8200.00, ultimo_preco: 8300.00, qtd_ult: 2, qtd_media: 3.4},
+      {codigo:"DM-O011", preco_medio: 295.00, ultimo_preco: 300.00, qtd_ult: 6, qtd_media: 7.0},
+      {codigo:"DM-M020", preco_medio: 405.00, ultimo_preco: 410.00, qtd_ult: 8, qtd_media: 8.8},
+    ]},
+    { grupo:"Centro Ortopédico Plus",   uf:"SP", seg:"Clínica",      status:"Ativo",         inadimplente:false, cadastro:"2021-11-03", ult_pedido:"2026-06-05", total_pedidos:  48, fat: 156_400.00, inativ_data:null, pedidos_pendentes: 0, valor_pendente: 0.00, representante_id: "R09", data_inativacao_prevista: "2026-08-30",         historico_mensal: {"2026-01":{fat:23981.33,pedidos:7},"2026-02":{fat:23460.0,pedidos:7},"2026-03":{fat:27370.0,pedidos:8},"2026-04":{fat:26066.67,pedidos:8},"2026-05":{fat:27630.67,pedidos:8},"2026-06":{fat:27891.33,pedidos:9}}, skus_comprados:[
+      {codigo:"DM-O004", preco_medio: 8350.00, ultimo_preco: 8400.00, qtd_ult: 2, qtd_media: 1},
+      {codigo:"DM-O011", preco_medio: 312.00, ultimo_preco: 318.00, qtd_ult: 12, qtd_media: 13.0},
+      {codigo:"DM-O025", preco_medio: 142.00, ultimo_preco: 145.00, qtd_ult: 7, qtd_media: 5.6},
+      {codigo:"DM-O036", preco_medio: 96.00, ultimo_preco: 98.00, qtd_ult: 5, qtd_media: 7.1},
+      {codigo:"DM-O042", preco_medio: 532.00, ultimo_preco: 540.00, qtd_ult: 2, qtd_media: 2.5},
+    ]},
+    { grupo:"Drogaria Saúde Total",     uf:"GO", seg:"Farmácia",     status:"Ativo",         inadimplente:false, cadastro:"2022-03-20", ult_pedido:"2026-05-15", total_pedidos:  36, fat: 121_300.00, inativ_data:null, pedidos_pendentes: 0, valor_pendente: 0.00, representante_id: "R10", data_inativacao_prevista: "2026-11-10",         historico_mensal: {"2026-01":{fat:22636.11,pedidos:7},"2026-02":{fat:22144.02,pedidos:7},"2026-03":{fat:25834.69,pedidos:8},"2026-04":{fat:24604.46,pedidos:7},"2026-05":{fat:26080.73,pedidos:8}}, skus_comprados:[
+      {codigo:"DM-H023", preco_medio: 188.00, ultimo_preco: 189.00, qtd_ult: 10, qtd_media: 9.8},
+      {codigo:"DM-M020", preco_medio: 420.00, ultimo_preco: 425.00, qtd_ult: 6, qtd_media: 5.6},
+    ]},
+    { grupo:"Hospital Santa Marta",     uf:"RJ", seg:"Hospital",     status:"Em onboarding", inadimplente:false, cadastro:"2026-02-10", ult_pedido:"2026-06-08", total_pedidos:  11, fat:  48_700.00, inativ_data:null, pedidos_pendentes: 0, valor_pendente: 0.00, representante_id: "R02", data_inativacao_prevista: null,         historico_mensal: {"2026-01":{fat:7467.33,pedidos:2},"2026-02":{fat:7305.0,pedidos:2},"2026-03":{fat:8522.5,pedidos:2},"2026-04":{fat:8116.67,pedidos:2},"2026-05":{fat:8603.67,pedidos:2},"2026-06":{fat:8684.83,pedidos:2}}, skus_comprados:[
+      {codigo:"DM-H001", preco_medio: 320.00, ultimo_preco: 320.00, qtd_ult: 10, qtd_media: 9.1},
+      {codigo:"DM-H012", preco_medio: 215.00, ultimo_preco: 215.00, qtd_ult: 12, qtd_media: 10.5},
+    ]},
+    { grupo:"Clínica Bem Cuidar",       uf:"MG", seg:"Clínica",      status:"Em onboarding", inadimplente:false, cadastro:"2026-03-05", ult_pedido:"2026-06-12", total_pedidos:   8, fat:  31_200.00, inativ_data:null, pedidos_pendentes: 0, valor_pendente: 0.00, representante_id: "R01", data_inativacao_prevista: null,         historico_mensal: {"2026-01":{fat:4784.0,pedidos:1},"2026-02":{fat:4680.0,pedidos:1},"2026-03":{fat:5460.0,pedidos:1},"2026-04":{fat:5200.0,pedidos:1},"2026-05":{fat:5512.0,pedidos:1},"2026-06":{fat:5564.0,pedidos:1}}, skus_comprados:[
+      {codigo:"DM-H023", preco_medio: 189.00, ultimo_preco: 189.00, qtd_ult: 14, qtd_media: 12.0},
+      {codigo:"DM-B017", preco_medio: 1240.00, ultimo_preco: 1240.00, qtd_ult: 3, qtd_media: 4.6},
+    ]},
+    { grupo:"Distribuidora NorteMed",   uf:"PA", seg:"Distribuidor", status:"Em onboarding", inadimplente:false, cadastro:"2026-04-01", ult_pedido:"2026-06-01", total_pedidos:   6, fat:  28_500.00, inativ_data:null, pedidos_pendentes: 0, valor_pendente: 0.00, representante_id: "R11", data_inativacao_prevista: null,         historico_mensal: {"2026-01":{fat:4370.0,pedidos:1},"2026-02":{fat:4275.0,pedidos:1},"2026-03":{fat:4987.5,pedidos:1},"2026-04":{fat:4750.0,pedidos:1},"2026-05":{fat:5035.0,pedidos:1},"2026-06":{fat:5082.5,pedidos:1}}, skus_comprados:[
+      {codigo:"DM-O011", preco_medio: 318.00, ultimo_preco: 320.00, qtd_ult: 9, qtd_media: 9.5},
+      {codigo:"DM-O025", preco_medio: 144.00, ultimo_preco: 145.00, qtd_ult: 9, qtd_media: 8.0},
+    ]},
+    { grupo:"Casa de Repouso Bom Lar",  uf:"RS", seg:"Home Care",    status:"Em onboarding", inadimplente:false, cadastro:"2026-04-22", ult_pedido:"2026-05-29", total_pedidos:   4, fat:  19_800.00, inativ_data:null, pedidos_pendentes: 0, valor_pendente: 0.00, representante_id: "R05", data_inativacao_prevista: null,         historico_mensal: {"2026-01":{fat:3694.93,pedidos:1},"2026-02":{fat:3614.6,pedidos:1},"2026-03":{fat:4217.04,pedidos:1},"2026-04":{fat:4016.23,pedidos:1},"2026-05":{fat:4257.2,pedidos:1}}, skus_comprados:[
+      {codigo:"DM-O042", preco_medio: 538.00, ultimo_preco: 540.00, qtd_ult: 8, qtd_media: 10.1},
+      {codigo:"DM-M015", preco_medio: 178.00, ultimo_preco: 180.00, qtd_ult: 9, qtd_media: 10.0},
+    ]},
+    { grupo:"Hospital Cruz Vermelha",   uf:"ES", seg:"Hospital",     status:"Prospect",      inadimplente:false, cadastro:"2026-05-10", ult_pedido:null,         total_pedidos:   0, fat:       0.00, inativ_data:null, pedidos_pendentes: 0, valor_pendente: 0.00, representante_id: "R04", data_inativacao_prevista: null,         historico_mensal: {}, skus_comprados:[] },
+    { grupo:"Clínica Estética Élan",    uf:"SP", seg:"Clínica",      status:"Prospect",      inadimplente:false, cadastro:"2026-05-18", ult_pedido:null,         total_pedidos:   0, fat:       0.00, inativ_data:null, pedidos_pendentes: 0, valor_pendente: 0.00, representante_id: "R08", data_inativacao_prevista: null,         historico_mensal: {}, skus_comprados:[] },
+    { grupo:"Farmácia Popular Sul",     uf:"PR", seg:"Farmácia",     status:"Prospect",      inadimplente:false, cadastro:"2026-06-01", ult_pedido:null,         total_pedidos:   0, fat:       0.00, inativ_data:null, pedidos_pendentes: 0, valor_pendente: 0.00, representante_id: "R12", data_inativacao_prevista: null,         historico_mensal: {}, skus_comprados:[] },
+    { grupo:"Distrib. CentroSaúde",     uf:"DF", seg:"Distribuidor", status:"Prospect",      inadimplente:false, cadastro:"2026-06-05", ult_pedido:null,         total_pedidos:   0, fat:       0.00, inativ_data:null, pedidos_pendentes: 0, valor_pendente: 0.00, representante_id: "R04", data_inativacao_prevista: null,         historico_mensal: {}, skus_comprados:[] },
+    { grupo:"Home Care Família",        uf:"SC", seg:"Home Care",    status:"Prospect",      inadimplente:false, cadastro:"2026-06-10", ult_pedido:null,         total_pedidos:   0, fat:       0.00, inativ_data:null, pedidos_pendentes: 0, valor_pendente: 0.00, representante_id: "R08", data_inativacao_prevista: null,         historico_mensal: {}, skus_comprados:[] },
+    { grupo:"Hospital Vida Plena",      uf:"CE", seg:"Hospital",     status:"Prospect",      inadimplente:false, cadastro:"2026-06-15", ult_pedido:null,         total_pedidos:   0, fat:       0.00, inativ_data:null, pedidos_pendentes: 0, valor_pendente: 0.00, representante_id: "R12", data_inativacao_prevista: null,         historico_mensal: {}, skus_comprados:[] },
+    { grupo:"Clínica Ortho Express",    uf:"RJ", seg:"Clínica",      status:"Suspenso",      inadimplente:true,  cadastro:"2019-04-18", ult_pedido:"2025-12-04", total_pedidos:  73, fat: 245_100.00, inativ_data:null, pedidos_pendentes: 0, valor_pendente: 0.00, representante_id: "R07", data_inativacao_prevista: null,         historico_mensal: {}, skus_comprados:[
+      {codigo:"DM-O004", preco_medio: 8050.00, ultimo_preco: 8100.00, qtd_ult: 1, qtd_media: 1},
+      {codigo:"DM-O011", preco_medio: 295.00, ultimo_preco: 298.00, qtd_ult: 8, qtd_media: 8.9},
+      {codigo:"DM-O025", preco_medio: 138.00, ultimo_preco: 140.00, qtd_ult: 13, qtd_media: 15.1},
+    ]},
+    { grupo:"Drogaria CentroSP",        uf:"SP", seg:"Farmácia",     status:"Suspenso",      inadimplente:true,  cadastro:"2020-10-02", ult_pedido:"2026-01-22", total_pedidos:  29, fat:  94_800.00, inativ_data:null, pedidos_pendentes: 0, valor_pendente: 0.00, representante_id: "R03", data_inativacao_prevista: null,         historico_mensal: {"2026-01":{fat:94800.0,pedidos:29}}, skus_comprados:[
+      {codigo:"DM-H023", preco_medio: 182.00, ultimo_preco: 184.00, qtd_ult: 23, qtd_media: 25.1},
+      {codigo:"DM-M020", preco_medio: 408.00, ultimo_preco: 412.00, qtd_ult: 10, qtd_media: 7.5},
+    ]},
+    { grupo:"Hospital Nossa Senhora",   uf:"BA", seg:"Hospital",     status:"Inativo",       inadimplente:false, cadastro:"2018-06-14", ult_pedido:"2025-09-30", total_pedidos: 110, fat: 412_500.00, inativ_data:"2026-03-15", pedidos_pendentes: 0, valor_pendente: 0.00, representante_id: "R02", data_inativacao_prevista: null, historico_mensal: {"2026-01":{fat:132229.97,pedidos:35},"2026-02":{fat:129355.4,pedidos:34},"2026-03":{fat:150914.63,pedidos:40}}, skus_comprados:[
+      {codigo:"DM-H001", preco_medio: 300.00, ultimo_preco: 305.00, qtd_ult: 13, qtd_media: 14.1},
+      {codigo:"DM-H012", preco_medio: 205.00, ultimo_preco: 208.00, qtd_ult: 15, qtd_media: 15.8},
+      {codigo:"DM-O004", preco_medio: 8100.00, ultimo_preco: 8150.00, qtd_ult: 1, qtd_media: 1},
+      {codigo:"DM-M020", preco_medio: 400.00, ultimo_preco: 405.00, qtd_ult: 6, qtd_media: 7.9},
+    ]},
+    { grupo:"Clínica Saúde Plena",      uf:"MG", seg:"Clínica",      status:"Inativo",       inadimplente:false, cadastro:"2019-11-08", ult_pedido:"2025-10-15", total_pedidos:  56, fat: 178_300.00, inativ_data:"2026-04-02", pedidos_pendentes: 0, valor_pendente: 0.00, representante_id: "R01", data_inativacao_prevista: null, historico_mensal: {"2026-01":{fat:42386.56,pedidos:13},"2026-02":{fat:41465.12,pedidos:13},"2026-03":{fat:48375.97,pedidos:15},"2026-04":{fat:46072.35,pedidos:14}}, skus_comprados:[
+      {codigo:"DM-H001", preco_medio: 308.00, ultimo_preco: 312.00, qtd_ult: 11, qtd_media: 11.2},
+      {codigo:"DM-B005", preco_medio: 275.00, ultimo_preco: 280.00, qtd_ult: 8, qtd_media: 8.4},
+    ]},
+    { grupo:"Distrib. AmazonMed",       uf:"AM", seg:"Distribuidor", status:"Inativo",       inadimplente:true,  cadastro:"2020-05-23", ult_pedido:"2025-08-10", total_pedidos:  44, fat: 152_700.00, inativ_data:"2026-02-28", pedidos_pendentes: 0, valor_pendente: 0.00, representante_id: "R06", data_inativacao_prevista: null, historico_mensal: {"2026-01":{fat:77189.01,pedidos:22},"2026-02":{fat:75510.99,pedidos:22}}, skus_comprados:[
+      {codigo:"DM-O011", preco_medio: 285.00, ultimo_preco: 288.00, qtd_ult: 4, qtd_media: 1.8},
+      {codigo:"DM-O025", preco_medio: 134.00, ultimo_preco: 136.00, qtd_ult: 8, qtd_media: 8.8},
+      {codigo:"DM-M020", preco_medio: 395.00, ultimo_preco: 400.00, qtd_ult: 3, qtd_media: 1},
+    ]},
+    { grupo:"Farmácia Norte Sul",       uf:"RN", seg:"Farmácia",     status:"Inativo",       inadimplente:false, cadastro:"2021-07-30", ult_pedido:"2025-11-12", total_pedidos:  22, fat:  67_400.00, inativ_data:"2026-05-20", pedidos_pendentes: 0, valor_pendente: 0.00, representante_id: "R10", data_inativacao_prevista: null, historico_mensal: {"2026-01":{fat:12577.69,pedidos:4},"2026-02":{fat:12304.26,pedidos:4},"2026-03":{fat:14354.97,pedidos:5},"2026-04":{fat:13671.4,pedidos:4},"2026-05":{fat:14491.68,pedidos:5}}, skus_comprados:[
+      {codigo:"DM-H023", preco_medio: 185.00, ultimo_preco: 188.00, qtd_ult: 12, qtd_media: 10.0},
+      {codigo:"DM-M015", preco_medio: 175.00, ultimo_preco: 178.00, qtd_ult: 13, qtd_media: 12.4},
+    ]},
+    { grupo:"Home Care Cuidar Mais",    uf:"RS", seg:"Home Care",    status:"Inativo",       inadimplente:false, cadastro:"2022-01-15", ult_pedido:"2025-07-25", total_pedidos:  18, fat:  54_200.00, inativ_data:"2026-01-10", pedidos_pendentes: 0, valor_pendente: 0.00, representante_id: "R09", data_inativacao_prevista: null, historico_mensal: {"2026-01":{fat:54200.0,pedidos:18}}, skus_comprados:[
+      {codigo:"DM-O042", preco_medio: 522.00, ultimo_preco: 528.00, qtd_ult: 6, qtd_media: 6.4},
+      {codigo:"DM-M015", preco_medio: 172.00, ultimo_preco: 175.00, qtd_ult: 14, qtd_media: 13.0},
+      {codigo:"DM-M033", preco_medio: 85.00, ultimo_preco: 88.00, qtd_ult: 30, qtd_media: 27.9},
+    ]},
+    { grupo:"Hospital São José",        uf:"SP", seg:"Hospital",     status:"Inativo",       inadimplente:true,  cadastro:"2017-09-12", ult_pedido:"2025-06-30", total_pedidos:  88, fat: 312_600.00, inativ_data:"2026-06-18", pedidos_pendentes: 0, valor_pendente: 0.00, representante_id: "R11", data_inativacao_prevista: null, historico_mensal: {"2026-01":{fat:47932.0,pedidos:13},"2026-02":{fat:46890.0,pedidos:13},"2026-03":{fat:54705.0,pedidos:15},"2026-04":{fat:52100.0,pedidos:15},"2026-05":{fat:55226.0,pedidos:16},"2026-06":{fat:55747.0,pedidos:16}}, skus_comprados:[
+      {codigo:"DM-H001", preco_medio: 295.00, ultimo_preco: 300.00, qtd_ult: 6, qtd_media: 6.1},
+      {codigo:"DM-H012", preco_medio: 200.00, ultimo_preco: 205.00, qtd_ult: 12, qtd_media: 9.8},
+      {codigo:"DM-H023", preco_medio: 175.00, ultimo_preco: 180.00, qtd_ult: 14, qtd_media: 15.9},
+      {codigo:"DM-O004", preco_medio: 7900.00, ultimo_preco: 7950.00, qtd_ult: 1, qtd_media: 1},
+      {codigo:"DM-O011", preco_medio: 282.00, ultimo_preco: 285.00, qtd_ult: 11, qtd_media: 12.9},
+      {codigo:"DM-M020", preco_medio: 390.00, ultimo_preco: 395.00, qtd_ult: 10, qtd_media: 10.3},
+    ]},
+  ],
+};
+
+/* ==========================================================
+   ESTADO + HELPERS
+   ========================================================== */
+
+const STATE = {
+  filtros:    { rep: new Set(), time: new Set(), ano: "2026", meses: new Set() },
+  drills:     { status: null, uf: null, seg: null, movement: null, carteira: null },
+  rankDesc:   true,
+  sortKey:    "fat",
+  sortDir:    "desc",
+  searchTerm: "",
+  expandedRow: null,
+  allExpanded: false,
+  pendSort:   { key: "pedidos", dir: "desc" },
+};
+
+const MESES_LBL = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
+
+/* formato contábil BR — sempre 2 casas decimais */
+const fmtBRL = (n) => "R$ " + (n||0).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const fmtInt = (n) => (n||0).toLocaleString("pt-BR");
+const fmtData = (s) => {
+  if (!s) return "—";
+  const [y,m,d] = s.split("-");
+  return `${d}/${m}/${y}`;
+};
+const diasDesde = (s) => {
+  if (!s) return null;
+  const d = new Date(s + "T00:00:00");
+  const hoje = new Date("2026-06-25T00:00:00");
+  return Math.floor((hoje - d) / 86400000);
+};
+
+/* ==========================================================
+   CROSS-FILTER — funções centrais de filtragem e agregação
+   Todo render passa por aqui. Mudou drill? Chama renderTudo().
+   ========================================================== */
+
+// Mock "hoje" para calculos relativos a data
+const HOJE_MOCK = new Date("2026-06-25T00:00:00");
+
+function repIdsDoSidebar() {
+  // resolve representantes selecionados a partir do sidebar (rep e time)
+  const repsByRep = [...STATE.filtros.rep];   // ids R01..R12
+  const timesSel = [...STATE.filtros.time];   // nomes dos lideres
+  const repsByTime = DADOS.representantes
+    .filter(r => timesSel.includes(r.time))
+    .map(r => r.id);
+  // uniao de rep direto + reps dos times selecionados
+  return new Set([...repsByRep, ...repsByTime]);
+}
+function temFiltroSidebar() {
+  return STATE.filtros.rep.size > 0 || STATE.filtros.time.size > 0;
+}
+
+function aplicaCarteiraDrill(g) {
+  const c = STATE.drills.carteira;
+  if (!c) return true;
+  const cat = classificarCarteira(g);
+  return cat.includes(c);
+}
+
+// Classifica um grupo nas categorias de carteira (um grupo pode pertencer a varias)
+function classificarCarteira(g) {
+  const cats = [];
+  // ATIVO MES ANTERIOR — ativos no momento (proxy)
+  if (g.status === "Ativo") cats.push("ativo_mes_ant");
+  // NUNCA COMPROU
+  if ((g.total_pedidos||0) === 0) cats.push("nunca_comprou");
+  // INATIVARAM NO MES — inativ_data dentro do mes do HOJE_MOCK
+  if (g.inativ_data) {
+    const d = new Date(g.inativ_data + "T00:00:00");
+    if (d.getFullYear() === HOJE_MOCK.getFullYear() && d.getMonth() === HOJE_MOCK.getMonth()) {
+      cats.push("inativaram_mes");
+    }
+  }
+  // SEM DATA DE INATIVACAO — Ativos sem data prevista nem efetiva
+  if (g.status === "Ativo" && !g.data_inativacao_prevista && !g.inativ_data) {
+    cats.push("sem_data_inativ");
+  }
+  // INATIVAM ESTE MES / PROX MES / 90 DIAS / FUTURA — baseado em data_inativacao_prevista
+  if (g.data_inativacao_prevista) {
+    const d = new Date(g.data_inativacao_prevista + "T00:00:00");
+    const diffDays = Math.floor((d - HOJE_MOCK) / 86400000);
+    const sameMonth = d.getFullYear() === HOJE_MOCK.getFullYear() && d.getMonth() === HOJE_MOCK.getMonth();
+    const nextMonth = (() => {
+      const nm = new Date(HOJE_MOCK); nm.setMonth(nm.getMonth() + 1);
+      return d.getFullYear() === nm.getFullYear() && d.getMonth() === nm.getMonth();
+    })();
+    if (sameMonth) cats.push("inat_este_mes");
+    else if (nextMonth) cats.push("inat_prox_mes");
+    else if (diffDays > 0 && diffDays <= 90) cats.push("inat_90d");
+    else if (diffDays > 90) cats.push("inat_futura");
+  }
+  return cats;
+}
+
+// drills + carteira (mas SEM sidebar)
+function getGruposPorDrills() {
+  return DADOS.grupos.filter(g => {
+    if (STATE.drills.status && g.status !== STATE.drills.status) return false;
+    if (STATE.drills.uf     && g.uf     !== STATE.drills.uf)     return false;
+    if (STATE.drills.seg    && g.seg    !== STATE.drills.seg)    return false;
+    if (!aplicaCarteiraDrill(g)) return false;
+    return true;
+  });
+}
+
+// drills + sidebar — fonte de verdade para charts/ranking/tabela
+function getGruposFiltrados() {
+  const reps = repIdsDoSidebar();
+  const filtroSidebar = reps.size > 0;
+  return getGruposPorDrills().filter(g => {
+    if (filtroSidebar && !reps.has(g.representante_id)) return false;
+    return true;
+  });
+}
+
+function getPendenciasFiltradas() {
+  return getGruposFiltrados()
+    .filter(g => (g.pedidos_pendentes || 0) > 0)
+    .map(g => ({
+      grupo:   g.grupo,
+      pedidos: g.pedidos_pendentes,
+      valor:   g.valor_pendente,
+    }));
+}
+
+function getStatusCounts() {
+  const grupos = getGruposFiltrados();
+  const counts = {};
+  grupos.forEach(g => { counts[g.status] = (counts[g.status]||0) + 1; });
+  return DADOS.status_clientes.map(s => ({ ...s, qtd: counts[s.status] || 0 }));
+}
+
+// Periodo ativo do sidebar — array de "AAAA-MM"
+function getMesesAtivos() {
+  const ano = STATE.filtros.ano;
+  if (STATE.filtros.meses.size === 0) {
+    // todos os meses do ano
+    return Array.from({length: 12}, (_, i) => `${ano}-${String(i+1).padStart(2,"0")}`);
+  }
+  return [...STATE.filtros.meses].sort((a,b) => a-b).map(m => `${ano}-${String(m).padStart(2,"0")}`);
+}
+function temFiltroPeriodo() {
+  return STATE.filtros.meses.size > 0 && STATE.filtros.meses.size < 12;
+}
+
+// Agrega fat e pedidos a partir do historico_mensal dos grupos, nos meses selecionados
+function agregaPeriodo(grupos, meses) {
+  let fat = 0, pedidos = 0;
+  grupos.forEach(g => {
+    const h = g.historico_mensal || {};
+    meses.forEach(m => {
+      const r = h[m];
+      if (r) { fat += r.fat || 0; pedidos += r.pedidos || 0; }
+    });
+  });
+  return { fat, pedidos };
+}
+
+function computarAgregado(grupos, meses) {
+  const p = agregaPeriodo(grupos, meses);
+  const inativos = grupos.filter(g => g.status === "Inativo" && g.inativ_data);
+  const ultimaInativ = inativos.length ? inativos.map(g => g.inativ_data).sort().pop() : null;
+  // ativos no periodo = grupos com fat > 0 nos meses
+  const ativosPeriodo = grupos.filter(g => {
+    if (!g.historico_mensal) return false;
+    return meses.some(m => (g.historico_mensal[m]?.fat || 0) > 0);
+  }).length;
+  // valor_pendente e pedidos_pendentes sao estado atual — nao mudam com mes
+  return {
+    faturamento:        p.fat,
+    pedidos_qtd:        p.pedidos,
+    pedidos_valor:      p.fat + grupos.reduce((s, g) => s + (g.valor_pendente||0), 0),
+    faturamento_aberto: grupos.reduce((s, g) => s + (g.valor_pendente||0), 0),
+    pedidos_aberto:     grupos.reduce((s, g) => s + (g.pedidos_pendentes||0), 0),
+    grupos_total:       grupos.length,
+    grupos_ativos:      ativosPeriodo,
+    inativacao_ultima:  ultimaInativ,
+  };
+}
+
+// Meta proporcional ao numero de meses selecionados (uniforme — sera substituida por meta mensal real do Qlik)
+function metaDellamedNoPeriodo(meses) {
+  return DADOS.totais.meta_comercial * (meses.length / 12);
+}
+function metaRecorteNoPeriodo(repIds, meses) {
+  if (!repIds || repIds.size === 0) return metaDellamedNoPeriodo(meses);
+  const reps = DADOS.representantes.filter(r => repIds.has(r.id));
+  const total = reps.reduce((s, r) => s + r.meta_individual, 0);
+  return total * (meses.length / 12);
+}
+
+// totais Dellamed (todos os grupos, drills aplicados, SEM sidebar — mas COM periodo)
+function totaisDellamed() {
+  const grupos = getGruposPorDrills();
+  const meses = getMesesAtivos();
+  return { ...computarAgregado(grupos, meses), meta: metaDellamedNoPeriodo(meses) };
+}
+
+// totais Recorte (com sidebar + drills + periodo)
+function totaisRecorte() {
+  const grupos = getGruposFiltrados();
+  const meses = getMesesAtivos();
+  const repIds = repIdsDoSidebar();
+  return { ...computarAgregado(grupos, meses), meta: metaRecorteNoPeriodo(repIds, meses) };
+}
+
+// breakdown de carteira (8 categorias) — usa o universo apropriado
+function breakdownCarteira(grupos) {
+  const total = grupos.length;
+  const counts = {
+    ativo_mes_ant: 0, inativaram_mes: 0, nunca_comprou: 0, sem_data_inativ: 0,
+    inat_este_mes: 0, inat_prox_mes: 0, inat_90d: 0, inat_futura: 0,
+  };
+  grupos.forEach(g => {
+    classificarCarteira(g).forEach(c => { counts[c] = (counts[c]||0) + 1; });
+  });
+  const pct = (n) => total > 0 ? ((n/total)*100).toFixed(2).replace(".", ",") + "%" : "0,00%";
+  return Object.fromEntries(Object.entries(counts).map(([k,v]) => [k, { qtd: v, pct: pct(v) }]));
+}
+
+/* ==========================================================
+   FILTROS (sidebar) — com busca
+   ========================================================== */
+
+function renderFiltros() {
+  const repBox = document.getElementById("filter-rep");
+  repBox.innerHTML = DADOS.representantes.map(r => `
+    <label class="opt" data-search="${(r.nome + ' ' + r.tipo).toLowerCase()}">
+      <input type="checkbox" data-id="${r.id}" data-kind="rep">
+      ${r.nome}<span class="sub">${r.tipo}</span>
+    </label>
+  `).join("");
+
+  const times = [...new Set(DADOS.representantes.map(r => r.time))].sort();
+  document.getElementById("filter-time").innerHTML = times.map(t => `
+    <label class="opt" data-search="${t.toLowerCase()}">
+      <input type="checkbox" data-id="${t}" data-kind="time">
+      ${t}
+    </label>
+  `).join("");
+
+  document.getElementById("filter-mes").innerHTML = MESES_LBL.map((m, i) => `
+    <div class="month-chip" data-m="${i+1}">${m}</div>
+  `).join("");
+
+  document.querySelectorAll('#filter-rep input').forEach(el => {
+    el.addEventListener('change', () => {
+      if (el.checked) STATE.filtros.rep.add(el.dataset.id);
+      else STATE.filtros.rep.delete(el.dataset.id);
+      atualizarContadores();
+    });
+  });
+  document.querySelectorAll('#filter-time input').forEach(el => {
+    el.addEventListener('change', () => {
+      if (el.checked) STATE.filtros.time.add(el.dataset.id);
+      else STATE.filtros.time.delete(el.dataset.id);
+      atualizarContadores();
+    });
+  });
+  document.querySelectorAll('#filter-mes .month-chip').forEach(el => {
+    el.addEventListener('click', () => {
+      const m = el.dataset.m;
+      if (STATE.filtros.meses.has(m)) { STATE.filtros.meses.delete(m); el.classList.remove("on"); }
+      else { STATE.filtros.meses.add(m); el.classList.add("on"); }
+      atualizarContadores();
+    });
+  });
+  document.getElementById("filter-year").addEventListener('change', e => { STATE.filtros.ano = e.target.value; });
+
+  // busca nos filtros
+  const bindSearch = (inputId, listId) => {
+    document.getElementById(inputId).addEventListener("input", e => {
+      const q = e.target.value.toLowerCase().trim();
+      const opts = document.querySelectorAll(`#${listId} .opt`);
+      let visiveis = 0;
+      opts.forEach(o => {
+        const match = !q || o.dataset.search.includes(q);
+        o.classList.toggle("hidden", !match);
+        if (match) visiveis++;
+      });
+      // mensagem de vazio
+      const exist = document.querySelector(`#${listId} .empty-opt`);
+      if (visiveis === 0 && !exist) {
+        const div = document.createElement("div");
+        div.className = "empty-opt";
+        div.textContent = "Nenhum resultado";
+        document.getElementById(listId).appendChild(div);
+      } else if (visiveis > 0 && exist) {
+        exist.remove();
+      }
+    });
+  };
+  bindSearch("search-rep", "filter-rep");
+  bindSearch("search-time", "filter-time");
+
+  document.getElementById("btn-apply").addEventListener('click', () => renderTudo());
+  document.getElementById("btn-clear").addEventListener('click', limparFiltros);
+}
+function atualizarContadores() {
+  document.getElementById("cnt-rep").textContent = STATE.filtros.rep.size || "—";
+  document.getElementById("cnt-time").textContent = STATE.filtros.time.size || "—";
+  document.getElementById("cnt-mes").textContent = STATE.filtros.meses.size || "—";
+}
+function limparFiltros() {
+  STATE.filtros.rep.clear(); STATE.filtros.time.clear(); STATE.filtros.meses.clear();
+  document.querySelectorAll('.sidebar input[type=checkbox]').forEach(el => el.checked = false);
+  document.querySelectorAll('.month-chip').forEach(el => el.classList.remove("on"));
+  document.querySelectorAll('.filter-search').forEach(el => { el.value = ""; el.dispatchEvent(new Event("input")); });
+  atualizarContadores();
+  renderTudo();
+}
+
+/* ==========================================================
+   KPIs e cards
+   ========================================================== */
+
+function renderKPIs() {
+  // === FAIXA DELLAMED ===
+  const d = totaisDellamed();
+  document.getElementById("kpi-meta").textContent = fmtBRL(d.meta);
+  document.getElementById("kpi-fat").textContent  = fmtBRL(d.faturamento);
+  document.getElementById("kpi-ped").textContent  = fmtBRL(d.pedidos_valor);
+  document.getElementById("kpi-grupos").textContent = fmtInt(d.grupos_total);
+  document.getElementById("kpi-grupos-foot").textContent = `${d.grupos_ativos} ativos no recorte`;
+
+  const pctFat = d.meta > 0 ? (d.faturamento / d.meta) * 100 : 0;
+  const pillFat = document.getElementById("kpi-fat-vs");
+  pillFat.textContent = pctFat.toFixed(2).replace(".", ",") + "%";
+  pillFat.className = "pill " + (pctFat >= 100 ? "ok" : pctFat >= 85 ? "warn" : "crit");
+  document.getElementById("kpi-fat-bar").style.width = Math.min(pctFat, 100) + "%";
+
+  // === FAIXA RECORTE — so aparece se houver filtro de Time/Rep ===
+  const linhaRec = document.getElementById("kpi-recorte");
+  if (!temFiltroSidebar()) {
+    linhaRec.style.display = "none";
+  } else {
+    linhaRec.style.display = "grid";
+    const r = totaisRecorte();
+    document.getElementById("rec-meta").textContent = fmtBRL(r.meta);
+    document.getElementById("rec-fat").textContent  = fmtBRL(r.faturamento);
+    document.getElementById("rec-ped").textContent  = fmtBRL(r.pedidos_valor);
+    document.getElementById("rec-grupos").textContent = fmtInt(r.grupos_total);
+    document.getElementById("rec-grupos-foot").textContent = `${r.grupos_ativos} ativos`;
+
+    const pctFatR = r.meta > 0 ? (r.faturamento / r.meta) * 100 : 0;
+    const pillFatR = document.getElementById("rec-fat-vs");
+    pillFatR.textContent = pctFatR.toFixed(2).replace(".", ",") + "%";
+    pillFatR.className = "pill " + (pctFatR >= 100 ? "ok" : pctFatR >= 85 ? "warn" : "crit");
+
+    // tag dinamica (mostra "TIME" ou "REPRESENTANTE" conforme o filtro)
+    let tagTxt = "RECORTE";
+    if (STATE.filtros.time.size > 0 && STATE.filtros.rep.size === 0) tagTxt = "TIME";
+    else if (STATE.filtros.rep.size > 0 && STATE.filtros.time.size === 0) tagTxt = "REPRESENTANTE";
+    else if (STATE.filtros.time.size > 0 && STATE.filtros.rep.size > 0)   tagTxt = "RECORTE";
+    ["rec-tag-1","rec-tag-2","rec-tag-3"].forEach(id => document.getElementById(id).textContent = tagTxt);
+
+    document.getElementById("rec-meta-foot").textContent =
+      STATE.filtros.rep.size > 0 ? `${STATE.filtros.rep.size} representante(s)` :
+      STATE.filtros.time.size > 0 ? `${STATE.filtros.time.size} time(s)` : "";
+  }
+
+  // === MOVIMENTACAO / CARTEIRA (8 KPIs) — usa universo do Recorte (drills + sidebar) ===
+  const gruposRec = getGruposFiltrados();
+  const bc = breakdownCarteira(gruposRec);
+  const setEl = (id, qtd, pct) => {
+    document.getElementById(id).textContent = fmtInt(qtd);
+    const pctEl = document.getElementById(id + "-pct");
+    if (pctEl) pctEl.textContent = pct;
+  };
+  setEl("cart-ativo-ant", bc.ativo_mes_ant.qtd,   bc.ativo_mes_ant.pct);
+  setEl("cart-inat-mes",  bc.inativaram_mes.qtd,  bc.inativaram_mes.pct);
+  setEl("cart-nunca",     bc.nunca_comprou.qtd,   bc.nunca_comprou.pct);
+  setEl("cart-sem-data",  bc.sem_data_inativ.qtd, bc.sem_data_inativ.pct);
+  setEl("cart-inat-este", bc.inat_este_mes.qtd,   bc.inat_este_mes.pct);
+  setEl("cart-inat-prox", bc.inat_prox_mes.qtd,   bc.inat_prox_mes.pct);
+  setEl("cart-inat-90d",  bc.inat_90d.qtd,        bc.inat_90d.pct);
+  setEl("cart-inat-fut",  bc.inat_futura.qtd,     bc.inat_futura.pct);
+
+  // === EM ABERTO ===
+  const ab = totaisRecorte();
+  document.getElementById("ab-fat").textContent = fmtBRL(ab.faturamento_aberto);
+  document.getElementById("ab-ped").textContent = fmtInt(ab.pedidos_aberto);
+
+  document.getElementById("last-update").textContent =
+    new Date(DADOS.atualizado_em).toLocaleString("pt-BR", { dateStyle:"short", timeStyle:"short" });
+
+  // Indicador do periodo ativo
+  const meses = getMesesAtivos();
+  const MES_LBL = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
+  const periodoEl = document.getElementById("periodo-info");
+  if (STATE.filtros.meses.size === 0) {
+    periodoEl.textContent = `· Ano ${STATE.filtros.ano} (todos os meses)`;
+  } else {
+    const lbls = [...STATE.filtros.meses].sort((a,b)=>a-b).map(m => MES_LBL[m-1]).join(", ");
+    periodoEl.textContent = `· ${lbls}/${STATE.filtros.ano}`;
+  }
+}
+
+function renderStatusList() {
+  const lista = getStatusCounts();
+  const total = lista.reduce((s,x) => s + x.qtd, 0);
+  const sorted = [...lista].sort((a,b) => b.qtd - a.qtd);
+  document.getElementById("status-list").innerHTML = sorted.map(s => {
+    const pct = total > 0 ? ((s.qtd / total) * 100).toFixed(2).replace(".", ",") : "0,00";
+    const isActive = STATE.drills.status === s.status;
+    return `
+      <div class="status-row ${isActive ? "active" : ""}" data-drill="status:${s.status}">
+        <span class="status-dot" style="background:${s.cor}"></span>
+        <span class="status-name">${s.status}</span>
+        <span class="status-qty">${fmtInt(s.qtd)}</span>
+        <span class="status-pct">${pct}%</span>
+      </div>`;
+  }).join("");
+}
+
+const PEND_COLS = [
+  { k: "grupo",   lbl: "Grupos com pedidos pendentes", num: false },
+  { k: "pedidos", lbl: "Pedidos",                      num: true  },
+  { k: "valor",   lbl: "Valor",                        num: true  },
+];
+
+function renderPendencias() {
+  // thead com setas
+  document.getElementById("pend-thead").innerHTML = PEND_COLS.map(c => {
+    const sortedCls = STATE.pendSort.key === c.k ? "sorted" : "";
+    const arrow = STATE.pendSort.key === c.k ? (STATE.pendSort.dir === "asc" ? "▲" : "▼") : "↕";
+    return `<th class="${sortedCls} ${c.num ? "num" : ""}" data-k="${c.k}" style="cursor:pointer;user-select:none">
+      ${c.lbl} <span style="color:var(--text-3); margin-left:4px; font-size:9px">${arrow}</span>
+    </th>`;
+  }).join("");
+  document.querySelectorAll("#pend-thead th").forEach(th => {
+    th.addEventListener("click", () => {
+      const k = th.dataset.k;
+      if (STATE.pendSort.key === k) {
+        STATE.pendSort.dir = STATE.pendSort.dir === "asc" ? "desc" : "asc";
+      } else {
+        const col = PEND_COLS.find(c => c.k === k);
+        STATE.pendSort.key = k;
+        STATE.pendSort.dir = col.num ? "desc" : "asc";
+      }
+      renderPendencias();
+    });
+  });
+
+  // tbody com dados filtrados
+  let dados = getPendenciasFiltradas();
+  const { key, dir } = STATE.pendSort;
+  dados = [...dados].sort((a, b) => {
+    const va = a[key], vb = b[key];
+    if (typeof va === "string") {
+      return dir === "asc" ? va.localeCompare(vb, "pt-BR") : vb.localeCompare(va, "pt-BR");
+    }
+    return dir === "asc" ? va - vb : vb - va;
+  });
+
+  const body = document.getElementById("pendentes-body");
+  if (!dados.length) {
+    body.innerHTML = `<tr><td colspan="3" style="text-align:center; color:var(--text-3); padding:14px 0">Nenhuma pendência no recorte</td></tr>`;
+    return;
+  }
+  body.innerHTML = dados.map(p => `<tr>
+    <td>${p.grupo}</td>
+    <td class="num">${p.pedidos}</td>
+    <td class="num">${fmtBRL(p.valor)}</td>
+  </tr>`).join("");
+}
+
+/* ==========================================================
+   CHARTS (UF / Segmento) — cliques ativam drill
+   ========================================================== */
+
+let chartUF, chartSeg;
+function renderCharts() {
+  // os charts mostram a distribuição dos grupos JÁ filtrados pelos outros drills
+  // (cross-filter coerente). O drill do próprio chart destaca o item clicado.
+  const base = getGruposFiltrados();
+  const ufCount = {}, segCount = {};
+  base.forEach(g => {
+    ufCount[g.uf]   = (ufCount[g.uf]   || 0) + 1;
+    segCount[g.seg] = (segCount[g.seg] || 0) + 1;
+  });
+  const ufSorted  = Object.entries(ufCount).sort((a,b) => b[1] - a[1]);
+  const segSorted = Object.entries(segCount).sort((a,b) => b[1] - a[1]);
+
+  if (chartUF) chartUF.destroy();
+  chartUF = new Chart(document.getElementById("chart-uf"), {
+    type: "bar",
+    data: {
+      labels: ufSorted.map(x => x[0]),
+      datasets: [{
+        data: ufSorted.map(x => x[1]),
+        backgroundColor: ufSorted.map(x => STATE.drills.uf === x[0] ? "#002d5a" : "#0056b3"),
+        borderRadius: 3,
+      }]
+    },
+    options: {
+      indexAxis: "y",
+      responsive: true,
+      maintainAspectRatio: false,
+      onClick: (evt, els) => {
+        if (!els.length) return;
+        const uf = ufSorted[els[0].index][0];
+        STATE.drills.uf = STATE.drills.uf === uf ? null : uf;
+        renderTudo();
+      },
+      plugins: { legend: { display: false }, tooltip: { callbacks: {
+        label: ctx => `${ctx.parsed.x} grupo${ctx.parsed.x === 1 ? "" : "s"}`
+      }}},
+      scales: {
+        x: { beginAtZero: true, grid: { color: "#f0f3f8" }, ticks: { stepSize: 1, color: "#5b6678", font: { size: 11 } } },
+        y: { grid: { display: false }, ticks: { color: "#1a2332", font: { size: 11 } } }
+      }
+    }
+  });
+
+  if (chartSeg) chartSeg.destroy();
+  chartSeg = new Chart(document.getElementById("chart-seg"), {
+    type: "doughnut",
+    data: {
+      labels: segSorted.map(x => x[0]),
+      datasets: [{
+        data: segSorted.map(x => x[1]),
+        backgroundColor: segSorted.map((x,i) => STATE.drills.seg === x[0] ? "#002d5a" : ["#0056b3","#4a90d9","#86b6e3","#cfe1f5","#1f6cb5"][i % 5]),
+        borderWidth: 0,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: "62%",
+      onClick: (evt, els) => {
+        if (!els.length) return;
+        const seg = segSorted[els[0].index][0];
+        STATE.drills.seg = STATE.drills.seg === seg ? null : seg;
+        renderTudo();
+      },
+      plugins: {
+        legend: {
+          position: "bottom",
+          labels: { color: "#1a2332", font: { size: 11 }, boxWidth: 10, padding: 10 }
+        }
+      }
+    }
+  });
+}
+
+/* ==========================================================
+   RANKING
+   ========================================================== */
+
+function renderRanking() {
+  const sorted = getGruposFiltrados()
+    .filter(g => g.fat > 0)
+    .sort((a,b) => STATE.rankDesc ? b.fat - a.fat : a.fat - b.fat);
+  document.getElementById("rank-dir-label").textContent = STATE.rankDesc ? "↓ decrescente" : "↑ crescente";
+  if (!sorted.length) {
+    document.getElementById("rank-list").innerHTML = `<div style="color:var(--text-3);font-size:12px;padding:14px 0;text-align:center">Nenhum grupo com faturamento no recorte</div>`;
+    return;
+  }
+  const max = Math.max(...sorted.map(g => g.fat));
+  const top = sorted.slice(0, 10);
+  document.getElementById("rank-list").innerHTML = top.map((g, i) => `
+    <div class="rank-row">
+      <span class="rank-num">${(STATE.rankDesc ? i+1 : sorted.length - i).toString().padStart(2, "0")}</span>
+      <span class="rank-name">${g.grupo}</span>
+      <span class="rank-bar-wrap"><span class="rank-bar" style="width:${(g.fat/max*100).toFixed(0)}%"></span></span>
+      <span class="rank-value">${fmtBRL(g.fat)}</span>
+    </div>`).join("");
+}
+
+/* ==========================================================
+   CROSS-FILTER (drills clicáveis)
+   ========================================================== */
+
+function bindClickableKPIs() {
+  // event delegation: pega clicks em qualquer elemento [data-drill], inclusive
+  // os criados depois (status-list re-renderiza via innerHTML).
+  document.addEventListener("click", (e) => {
+    const el = e.target.closest("[data-drill]");
+    if (!el) return;
+    // ignora clicks dentro de chip "×" (esse já tem seu próprio handler)
+    if (e.target.classList.contains("x")) return;
+    const [tipo, valor] = el.dataset.drill.split(":");
+    if (tipo === "all-groups") {
+      document.querySelector(".table-wrap").scrollIntoView({ behavior: "smooth", block: "start" });
+      return;
+    }
+    if (tipo === "status")        STATE.drills.status   = STATE.drills.status   === valor ? null : valor;
+    else if (tipo === "movement") STATE.drills.movement = STATE.drills.movement === valor ? null : valor;
+    else if (tipo === "carteira") STATE.drills.carteira = STATE.drills.carteira === valor ? null : valor;
+    else if (tipo === "uf")       STATE.drills.uf       = STATE.drills.uf       === valor ? null : valor;
+    else if (tipo === "seg")      STATE.drills.seg      = STATE.drills.seg      === valor ? null : valor;
+    renderTudo();
+  });
+}
+function atualizarAtivos() {
+  document.querySelectorAll(".sub-kpi[data-drill]").forEach(el => {
+    const [tipo, valor] = el.dataset.drill.split(":");
+    const ativo = (tipo === "status"   && STATE.drills.status   === valor) ||
+                  (tipo === "movement" && STATE.drills.movement === valor) ||
+                  (tipo === "carteira" && STATE.drills.carteira === valor);
+    el.classList.toggle("active", ativo);
+  });
+}
+function renderActiveFilters() {
+  const list = document.getElementById("active-filters-list");
+  const bar = document.getElementById("active-filters");
+  const ativos = [];
+  const CART_LBL = {
+    ativo_mes_ant:"Ativo Mês Anterior", inativaram_mes:"Inativaram no Mês",
+    nunca_comprou:"Nunca Comprou", sem_data_inativ:"Sem Data Inativação",
+    inat_este_mes:"Inativam Este Mês", inat_prox_mes:"Inativam Próx. Mês",
+    inat_90d:"Inativam em 90 Dias", inat_futura:"Inativação Futura",
+  };
+  if (STATE.drills.status)   ativos.push({ k: "status",   v: STATE.drills.status,   lbl: "Status" });
+  if (STATE.drills.uf)       ativos.push({ k: "uf",       v: STATE.drills.uf,       lbl: "UF" });
+  if (STATE.drills.seg)      ativos.push({ k: "seg",      v: STATE.drills.seg,      lbl: "Segmento" });
+  if (STATE.drills.carteira) ativos.push({ k: "carteira", v: CART_LBL[STATE.drills.carteira] || STATE.drills.carteira, lbl: "Carteira" });
+  if (STATE.drills.movement) ativos.push({ k: "movement", v: STATE.drills.movement, lbl: "Movimentação" });
+  if (!ativos.length) { bar.style.display = "none"; return; }
+  bar.style.display = "flex";
+  list.innerHTML = ativos.map(a => `
+    <span class="chip-active">
+      ${a.lbl}: ${a.v}
+      <span class="x" data-k="${a.k}">×</span>
+    </span>
+  `).join("");
+  list.querySelectorAll(".x").forEach(x => {
+    x.addEventListener("click", () => {
+      STATE.drills[x.dataset.k] = null;
+      renderTudo();
+    });
+  });
+}
+document.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("clear-drills").addEventListener("click", () => {
+    STATE.drills = { status: null, uf: null, seg: null, movement: null, carteira: null };
+    renderTudo();
+  });
+  document.getElementById("rank-toggle").addEventListener("click", () => {
+    STATE.rankDesc = !STATE.rankDesc;
+    renderRanking();
+  });
+});
+
+/* ==========================================================
+   TABELA DETALHADA — com cross-filter e expand com preços
+   ========================================================== */
+
+const COLUNAS = [
+  { k: "_exp",      lbl: "",                  num: false, w: 30, noSort: true },
+  { k: "grupo",     lbl: "Grupo de cliente",  num: false },
+  { k: "seg",       lbl: "Segmento",          num: false },
+  { k: "rep_nome",  lbl: "Representante",     num: false },
+  { k: "uf",        lbl: "UF",                num: false },
+  { k: "status",    lbl: "Status",            num: false },
+  { k: "inadimplente", lbl: "Inadimplente",   num: false },
+  { k: "cadastro",  lbl: "Cadastro",          num: false },
+  { k: "ult_pedido",lbl: "Último pedido",     num: false },
+  { k: "dias_sem",  lbl: "Dias sem pedir",    num: true  },
+  { k: "total_pedidos", lbl: "Pedidos",       num: true  },
+  { k: "fat",       lbl: "Faturamento",       num: true  },
+  { k: "cobertura", lbl: "SKUs",              num: false },
+  { k: "inativ_data", lbl: "Data inativação", num: false },
+];
+
+function renderTabelaHeader() {
+  document.getElementById("thead-row").innerHTML = COLUNAS.map(c => {
+    const sortedCls = STATE.sortKey === c.k ? "sorted" : "";
+    const arrow = STATE.sortKey === c.k ? (STATE.sortDir === "asc" ? "▲" : "▼") : "↕";
+    return `<th class="${sortedCls} ${c.num ? "num" : ""}" data-k="${c.k}" ${c.w?`style="width:${c.w}px"`:""}>
+      ${c.lbl}${c.noSort ? "" : `<span class="arrow">${arrow}</span>`}
+    </th>`;
+  }).join("");
+  document.querySelectorAll("#thead-row th").forEach(th => {
+    const k = th.dataset.k;
+    const col = COLUNAS.find(c => c.k === k);
+    if (col.noSort) return;
+    th.addEventListener("click", () => {
+      if (STATE.sortKey === k) STATE.sortDir = STATE.sortDir === "asc" ? "desc" : "asc";
+      else { STATE.sortKey = k; STATE.sortDir = col.num ? "desc" : "asc"; }
+      renderTabela();
+    });
+  });
+}
+
+function statusBadge(s) {
+  const map = { "Ativo":"ativo", "Inativo":"inativo", "Prospect":"prospect", "Em onboarding":"onboard", "Suspenso":"suspenso" };
+  return `<span class="badge ${map[s]||"suspenso"}">${s}</span>`;
+}
+
+// função mantida por compat — usa getGruposFiltrados (única fonte de verdade)
+function aplicarDrills(linhas) {
+  const idsFiltrados = new Set(getGruposFiltrados().map(g => g.grupo));
+  return linhas.filter(g => idsFiltrados.has(g.grupo));
+}
+
+function renderTabela() {
+  renderTabelaHeader();
+  const REP_NOMES = Object.fromEntries(DADOS.representantes.map(r => [r.id, r.nome]));
+  let linhas = DADOS.grupos.map(g => ({
+    ...g,
+    dias_sem: diasDesde(g.ult_pedido),
+    cobertura: `${g.skus_comprados.length}/${DADOS.skus.length}`,
+    rep_nome: REP_NOMES[g.representante_id] || "—",
+  }));
+
+  linhas = aplicarDrills(linhas);
+
+  if (STATE.searchTerm) {
+    const q = STATE.searchTerm.toLowerCase();
+    linhas = linhas.filter(g => g.grupo.toLowerCase().includes(q));
+  }
+
+  linhas.sort((a, b) => {
+    let va = a[STATE.sortKey], vb = b[STATE.sortKey];
+    if (STATE.sortKey === "cobertura") { va = a.skus_comprados.length; vb = b.skus_comprados.length; }
+    if (va == null && vb == null) return 0;
+    if (va == null) return 1;
+    if (vb == null) return -1;
+    if (typeof va === "string") return STATE.sortDir === "asc" ? va.localeCompare(vb, "pt-BR") : vb.localeCompare(va, "pt-BR");
+    return STATE.sortDir === "asc" ? va - vb : vb - va;
+  });
+
+  const tbody = document.getElementById("tbody");
+  tbody.innerHTML = linhas.map(g => {
+    const expanded = STATE.allExpanded || STATE.expandedRow === g.grupo;
+    const row = `
+      <tr data-grupo="${g.grupo}">
+        <td><button class="expand-btn ${expanded?"open":""}" data-grupo="${g.grupo}">${expanded?"−":"+"}</button></td>
+        <td class="grupo">${g.grupo}</td>
+        <td>${g.seg}</td>
+        <td>${g.rep_nome}</td>
+        <td>${g.uf}</td>
+        <td>${statusBadge(g.status)}</td>
+        <td class="${g.inadimplente?"flag-yes":"flag-no"}">${g.inadimplente?"Sim":"Não"}</td>
+        <td>${fmtData(g.cadastro)}</td>
+        <td>${fmtData(g.ult_pedido)}</td>
+        <td class="num">${g.dias_sem==null?"—":g.dias_sem}</td>
+        <td class="num">${fmtInt(g.total_pedidos)}</td>
+        <td class="num">${fmtBRL(g.fat)}</td>
+        <td class="num">${g.cobertura}</td>
+        <td>${fmtData(g.inativ_data)}</td>
+      </tr>`;
+    if (!expanded) return row;
+    // expansão com preços
+    const comprados = g.skus_comprados;
+    const codigosComprados = new Set(comprados.map(s => s.codigo));
+    const naoComprados = DADOS.skus.filter(s => !codigosComprados.has(s.codigo));
+
+    const compradosHTML = comprados.length ? `
+      <table class="sku-table comprados">
+        <thead><tr><th>Item</th><th class="num">Preço médio</th><th class="num">Último preço</th><th class="num">Qtd. último pedido</th><th class="num">Qtd. média</th></tr></thead>
+        <tbody>
+          ${comprados.map(s => {
+            const sku = DADOS.skus.find(x => x.codigo === s.codigo);
+            const delta = s.ultimo_preco - s.preco_medio;
+            const arrow = delta > 0 ? `<span class="delta-up">▲ ${fmtBRL(Math.abs(delta))}</span>`
+                          : delta < 0 ? `<span class="delta-down">▼ ${fmtBRL(Math.abs(delta))}</span>` : "";
+            return `<tr>
+              <td>${sku ? sku.desc : ""}</td>
+              <td class="num">${fmtBRL(s.preco_medio)}</td>
+              <td class="num">${fmtBRL(s.ultimo_preco)} ${arrow}</td>
+              <td class="num">${fmtInt(s.qtd_ult)}</td>
+              <td class="num">${(s.qtd_media).toLocaleString("pt-BR", {minimumFractionDigits: 1, maximumFractionDigits: 1})}</td>
+            </tr>`;
+          }).join("")}
+        </tbody>
+      </table>` : `<div style="color:var(--text-3);font-size:12px;padding:6px 0">Nenhum item comprado ainda</div>`;
+
+    const naoCompradosHTML = naoComprados.length ? `
+      <table class="sku-table naocomprados">
+        <thead><tr><th>Item</th></tr></thead>
+        <tbody>
+          ${naoComprados.map(s => `<tr>
+            <td>${s.desc}</td>
+          </tr>`).join("")}
+        </tbody>
+      </table>` : `<div style="color:var(--text-3);font-size:12px;padding:6px 0">Cobertura total do catálogo</div>`;
+
+    return row + `
+      <tr class="expand-row">
+        <td colspan="${COLUNAS.length}">
+          <div class="expand-grid">
+            <div class="expand-col">
+              <h5>Itens comprados <span style="color:var(--dm-blue)">${comprados.length}</span></h5>
+              ${compradosHTML}
+            </div>
+            <div class="expand-col">
+              <h5>Oportunidades — não comprou <span style="color:var(--text-3)">${naoComprados.length}</span></h5>
+              ${naoCompradosHTML}
+            </div>
+          </div>
+        </td>
+      </tr>`;
+  }).join("");
+
+  const totalGrupos = DADOS.grupos.length;
+  const txt = linhas.length === totalGrupos ? `${linhas.length} grupos` : `${linhas.length} de ${totalGrupos} grupos`;
+  document.getElementById("table-count").textContent = txt;
+
+  document.querySelectorAll(".expand-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const g = btn.dataset.grupo;
+      if (STATE.allExpanded) {
+        STATE.allExpanded = false;
+        STATE.expandedRow = g;
+        atualizarBtnExpandirTudo();
+      } else {
+        STATE.expandedRow = STATE.expandedRow === g ? null : g;
+      }
+      renderTabela();
+    });
+  });
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("table-search").addEventListener("input", e => {
+    STATE.searchTerm = e.target.value;
+    renderTabela();
+  });
+  document.getElementById("btn-csv").addEventListener("click", exportarCSV);
+  document.getElementById("btn-expand-all").addEventListener("click", () => {
+    STATE.allExpanded = !STATE.allExpanded;
+    STATE.expandedRow = null;
+    atualizarBtnExpandirTudo();
+    renderTabela();
+  });
+});
+
+function atualizarBtnExpandirTudo() {
+  const btn = document.getElementById("btn-expand-all");
+  if (!btn) return;
+  btn.textContent = STATE.allExpanded ? "Recolher tudo" : "Expandir tudo";
+  btn.classList.toggle("btn-sm-active", STATE.allExpanded);
+}
+
+function exportarCSV() {
+  const REP_NOMES = Object.fromEntries(DADOS.representantes.map(r => [r.id, r.nome]));
+  const headers = ["Grupo","Segmento","Representante","UF","Status","Inadimplente","Cadastro","Último pedido","Dias sem pedir","Pedidos","Faturamento","SKUs comprados","Inativação"];
+  const rows = DADOS.grupos.map(g => [
+    g.grupo, g.seg, REP_NOMES[g.representante_id] || "—", g.uf, g.status, g.inadimplente?"Sim":"Não",
+    g.cadastro, g.ult_pedido||"", diasDesde(g.ult_pedido)??"",
+    g.total_pedidos,
+    g.fat.toLocaleString("pt-BR", {minimumFractionDigits: 2, maximumFractionDigits: 2}),
+    `${g.skus_comprados.length}/${DADOS.skus.length}`,
+    g.inativ_data||""
+  ]);
+  const csv = [headers, ...rows].map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(";")).join("\n");
+  const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = `dellamed_carteira_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click(); URL.revokeObjectURL(url);
+}
+
+/* ==========================================================
+   ORQUESTRA
+   ========================================================== */
+
+function renderTudo() {
+  renderKPIs();
+  renderStatusList();
+  renderPendencias();
+  renderCharts();
+  renderRanking();
+  renderTabela();
+  renderActiveFilters();
+  atualizarAtivos();
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  renderFiltros();
+  renderTudo();
+  bindClickableKPIs();
+});
+</script>
+</body>
+</html>
