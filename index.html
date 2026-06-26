@@ -277,13 +277,24 @@ button, input, select { font-family: inherit; }
 .rank-row {
   display: grid; grid-template-columns: 26px 1fr auto auto;
   align-items: center; gap: 10px;
-  padding: 9px 0;
+  padding: 10px 0;
   border-bottom: 1px solid #f0f3f8;
   font-size: 13px;
 }
 .rank-row:last-child { border-bottom: none; }
 .rank-num { color: var(--text-3); font-weight: 600; font-size: 11px; text-align: right; }
-.rank-name { color: var(--text); font-weight: 500; }
+.rank-name-block { min-width: 0; }
+.rank-name { color: var(--text); font-weight: 500; line-height: 1.25; }
+.rank-meta {
+  font-size: 11px; color: var(--text-2);
+  margin-top: 3px;
+  display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: center;
+}
+.rank-pill { padding: 1px 7px; border-radius: 10px; font-size: 10px; font-weight: 600; letter-spacing: .2px; }
+.rank-pill-yes { background: #e6f5ec; color: var(--ok); }
+.rank-pill-no  { background: #fbe7e4; color: var(--crit); }
+.rank-date { color: var(--text-3); }
+.rank-date b { color: var(--text-2); font-weight: 500; }
 .rank-bar-wrap { width: 130px; height: 5px; background: var(--dm-blue-light); border-radius: 3px; overflow: hidden; }
 .rank-bar { height: 100%; background: var(--dm-blue); border-radius: 3px; }
 .rank-value { font-variant-numeric: tabular-nums; font-weight: 600; color: var(--dm-navy); min-width: 130px; text-align: right; font-size: 12.5px; }
@@ -1477,13 +1488,25 @@ function renderRanking() {
   }
   const max = Math.max(...sorted.map(g => g.fat));
   const top = sorted.slice(0, 10);
-  document.getElementById("rank-list").innerHTML = top.map((g, i) => `
+  document.getElementById("rank-list").innerHTML = top.map((g, i) => {
+    // "Tem carteira" = grupo em produção comercial (Ativo ou Em onboarding)
+    const temCart = (g.status === "Ativo" || g.status === "Em onboarding");
+    const pillCls = temCart ? "rank-pill-yes" : "rank-pill-no";
+    const pillTxt = temCart ? "Sim" : "Não";
+    return `
     <div class="rank-row">
       <span class="rank-num">${(STATE.rankDesc ? i+1 : sorted.length - i).toString().padStart(2, "0")}</span>
-      <span class="rank-name">${g.grupo}</span>
+      <div class="rank-name-block">
+        <div class="rank-name">${g.grupo}</div>
+        <div class="rank-meta">
+          <span>Tem carteira <span class="rank-pill ${pillCls}">${pillTxt}</span></span>
+          <span class="rank-date"><b>Último faturamento:</b> ${fmtData(g.ult_pedido)}</span>
+        </div>
+      </div>
       <span class="rank-bar-wrap"><span class="rank-bar" style="width:${(g.fat/max*100).toFixed(0)}%"></span></span>
       <span class="rank-value">${fmtBRL(g.fat)}</span>
-    </div>`).join("");
+    </div>`;
+  }).join("");
 }
 
 /* ==========================================================
